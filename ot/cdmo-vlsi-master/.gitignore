@@ -1,0 +1,10 @@
+
+# IDE
+.vscode
+
+# Byte-compiled files
+__pycache__/
+
+# Package-manager related files
+Pipfile
+Pipfile.lock
