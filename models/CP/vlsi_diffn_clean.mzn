@@ -9,6 +9,19 @@ include "chuffed.mzn";
   % OUTPUT  -> Output solving statistics;
 
 % Toy case
+<<<<<<< HEAD
+%w_c = [3,2,2,3,4];
+%h_c = [3,4,8,9,12];
+%n = 5;
+%w = 9;
+
+w_c=[34, 13, 13, 10, 10, 6, 6, 25, 25, 21, 16, 16, 21, 21, 5, 5, 4, 4, 6, 12, 12, 23, 7, 7, 2, 2, 6, 6, 14, 14, 16, 16, 14, 14, 14, 3, 3, 11, 11, 6, 6, 33, 12, 12, 16, 12, 12, 4, 4, 3, 3, 6, 6, 6, 6, 5, 5, 3, 3, 9, 6, 6, 2, 2, 8, 8, 10, 3, 3, 3, 3, 2, 2];
+
+h_c=[6, 3, 5, 12, 12, 7, 15, 7, 15, 12, 7, 5, 3, 5, 7, 5, 1, 10, 13, 13, 9, 6, 3, 5, 1, 10, 6, 5, 7, 6, 3, 5, 6, 5, 13, 2, 7, 2, 7, 7, 6, 14, 4, 3, 18, 3, 18, 4, 3, 1, 2, 9, 9, 1, 2, 7, 18, 9, 9, 18, 5, 2, 12, 9, 3, 9, 9, 5, 2, 18, 7, 3, 9];
+
+n=73;
+w=60;
+=======
 % w_c = [3,2,2,3,4];
 % h_c = [3,4,8,9,12];
 % n = 5;
@@ -20,6 +33,7 @@ w_c=[34, 13, 13, 10, 10, 6, 6, 25, 25, 21, 16, 16, 21, 21, 5, 5, 4, 4, 6, 12, 12
 h_c=[6, 3, 5, 12, 12, 7, 15, 7, 15, 12, 7, 5, 3, 5, 7, 5, 1, 10, 13, 13, 9, 6, 3, 5, 1, 10, 6, 5, 7, 6, 3, 5, 6, 5, 13, 2, 7, 2, 7, 7, 6, 14, 4, 3, 18, 3, 18, 4, 3, 1, 2, 9, 9, 1, 2, 7, 18, 9, 9, 18, 5, 2, 12, 9, 3, 9, 9, 5, 2, 18, 7, 3, 9];
 
 
+>>>>>>> 32f270be22c6f3e7c015c93fedcc44e7d1a36b82
 
 % -------------------------- VARIABLES --------------------------
 
@@ -36,7 +50,11 @@ array[1..n] of var 1..max(w,max_h): x;    % x dimensions of components
 array[1..n] of var 1..max(w,max_h): y;    % y dimensions of components
 
 % Variable to minimize
+<<<<<<< HEAD
+var int: h = max([y[i] + h_c[i] | i in 1..n])-1; 
+=======
 var int: h = max([y[i] + h_c[i]| i in 1..n])-1; 
+>>>>>>> 32f270be22c6f3e7c015c93fedcc44e7d1a36b82
 
 % ------------------------- CONSTRAINTS -------------------------
 
@@ -72,6 +90,8 @@ constraint
   2 * x[i_max] <= w;
 constraint 
   2 * y[i_max] <= h;
+<<<<<<< HEAD
+=======
 
 
 %%FIXME 
@@ -79,14 +99,20 @@ constraint
 %  forall(i,j in 1..n where i!=j) ((x[i]=x[j] /\ w_c[i]=w_c[j])->   (area[i]>area[j]->y[i]<y[j]));
 % constraint 
 %  forall(i,j in 1..n where i!=j) ((y[i]=y[j] /\ h_c[i]=h_c[j])->   (area[i]>area[j]-> x[i]<x[j]));
+>>>>>>> 32f270be22c6f3e7c015c93fedcc44e7d1a36b82
 
-% CONSTRAINT 2.2
-% Faster understanding to have found the optimal solution
-var int: empty_space= w * h - sum(area);
+% constraint
+%   forall (i,j in 1..n)
+%   ((((x[i] + w_c[i] == x[j]) \/ (x[j] + w_c[j] == x[i])) /\ area[i] >= area[j]) -> x[i] < x[j]);
+  
+% constraint
+%   forall (i,j in 1..n)
+%   ((((y[i] + h_c[i] == y[j]) \/ (y[j] + h_c[j] == y[i])) /\ area[i] >= area[j]) -> y[i] < y[j]);
 
-constraint 
-  empty_space >= 0;
-
+%constraint 
+%  2 * x[i_max] <= w - w_c[i_max] + 1;
+%constraint 
+%  2 * y[i_max] <= h - h_c[i_max] + 1;
 
 % ------------------------------ SEARCH ------------------------------
 ann: search_ann = priority_search(area, 
@@ -95,6 +121,9 @@ ann: search_ann = priority_search(area,
 solve :: search_ann minimize h;
 
 output
-  ["[[\(w), \(h)],\n"] ++ 
-  ["[\(w_c[i]), \(h_c[i]), \(x[i]), \(y[i])],\n" | i in 1..n-1] ++
-  ["[\(w_c[n]), \(h_c[n]), \(x[n]), \(y[n])]]"]
+  ["[[\(w), \(h)],\n"]; 
+
+%output
+%  ["[[\(w), \(h)],\n"] ++ 
+%  ["[\(w_c[i]), \(h_c[i]), \(x[i]), \(y[i])],\n" | i in 1..n-1] ++
+%  ["[\(w_c[n]), \(h_c[n]), \(x[n]), \(y[n])]]"]

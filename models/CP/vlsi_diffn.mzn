@@ -7,9 +7,9 @@ include "chuffed.mzn";
 % precision (proportional to w) and number of circuits
 
 % toy case
-% dim = [|3,3|2,4|2,8|3,9|4,12|]
-% n = 5
-% w = 9
+dim = [|3,3|2,4|2,8|3,9|4,12|];
+n = 5;
+w = 9;
 
 % case 7
 % dim = [|3, 3|3, 4|3, 5|3, 6|3, 7|3, 8|3, 9|5, 4|5, 10|]
@@ -75,7 +75,7 @@ array[1..n,1..2] of var 1..max(w,max_l): pos;
 constraint forall (i in 1..n) (pos[i,1]<=w-dim[i,1]+1);
 
 % variable to minimize
-var int: l=max([pos[i,2]+dim[i,2]|i in 1..n])-1; 
+var int: l=max([pos[i,2] + dim[i,2] |i in 1..n])-1; 
 
 % no overlap between circuits
 constraint diffn (pos[1..n,1],pos[1..n,2],dim[1..n,1],dim[1..n,2]) :: domain;
