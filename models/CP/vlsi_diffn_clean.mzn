@@ -28,20 +28,8 @@ int: max_h = sum(h_c[1..n]);              % Height of the silicon plate
 array[1..n] of var 1..max(w,max_h): x;    % x dimensions of components
 array[1..n] of var 1..max(w,max_h): y;    % y dimensions of components
 
-<<<<<<< HEAD
 % Variable to minimize
 var int: h = max([y[i] + h_c[i] | i in 1..n]); 
-=======
-%case 35
-% n=25
-% w=15
-% dim=[|2 , 11|3 , 2|7 , 10|4 , 8|5 , 9|2 , 7|1 , 4|1 , 6|5 , 4|3 , 8|3 , 1|5 , 5|1 , 3|4 , 12|2 , 6|4 , 2|4 , 11|2 , 10|2 , 3|2 , 11|4 , 3|4 , 26|4 , 8|2 , 3|2 , 6]
-
-% case 37
-% dim = [|5, 7|5 ,14|8 ,14|8, 4|13 ,21|11, 7|11 ,14|5 ,14|5, 4|3 ,18|3 ,21|11 ,17|11, 4|4, 7|4, 5|7, 6|5 ,18|5, 3|3, 7|3, 5|4 ,18|4, 3|2 ,12|2, 6|5 ,18|5 ,21|3 ,17|3 ,4 |]
-% n = 28
-% w = 30
->>>>>>> c43bbe252472464bc393c9ff2f8a8c4d23a67c16
 
 % ------------------------- CONSTRAINTS -------------------------
 
