@@ -1,0 +1,87 @@
+%% If writing in English, remove the lines above
+%% and uncomment the lines below
+
+% ------------- English version ---------------
+\documentclass[english]{sbrt}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\newtheorem{theorem}{Theorem}
+% ---------------------------------------------
+
+\begin{document}
+
+\title{VLSI Problem: MILP Formulation}
+
+\author{Scroto 
+\thanks{ZIOPINO }%
+}
+
+\maketitle
+
+\markboth{BOH}{}
+
+\begin{abstract}
+In this paper, we consider a floorplanning problem
+in the physical design of very large scale integration. We focus
+on the problem of placing a set of blocks (modules) on a chip
+with the objective of minimizing area of the chip. We will propose a method based on a linear programming and simulated annealing (SBORRA).  
+\end{abstract}
+\begin{keywords}
+Floorplanning, Linear Programming, Simulated Annealing
+\end{keywords}
+
+
+\section{Introduction}
+
+Sì
+
+%%______________MODEL FORMULATION______________%%
+\section{Model Formulation}
+
+\subsection{Parameters}
+\begin{enumerate}
+\item[$\eta$] Number of blocks
+\item[$w_c$] Width of the chip
+\item[$p_i$] Length of the shorter side of the block $i$
+\item[$q_i$] Length of the longer side of the block $i$
+\item[$M$] A very large positive number
+\end{enumerate}
+
+\subsection{Decision Variables}
+\begin{enumerate}
+\item[$w_i,h_i$] Width and height of block $i$
+\item[$x_i^l,x_i^r$] $x$ coordinates of the left and right boundaries of block $i$
+\item[$y_i^b,y_i^t$] $x$ coordinates of the bottom and top boundaries of block $i$
+\item[$h_c$] Height of the chip
+\item[$r_{ij}$] =0 if block $i$ is to be placed to the left of block $j$, 1 otherwise (i.e, block $i$ is free to be placed on any side of block $j$)
+\item[$r_{ij}$] =0 if block $i$ is to be placed below block $j$, 1 otherwise
+\item[$v_{ij}$] =0 if block $i$ is placed horizontally, 1 otherwise (i.e, when the block is rotated)
+\end{enumerate}
+
+\subsection{Equations}
+$$\text{Minimize} h_c}$
+subject to
+\begin{align}
+x_i^r-x_i^l&=w_i \forall i
+x_i^t-x_i^b&=w_i \forall i
+w_i=v_i\cdot p_i+(1-v_i)
+
+\end{align}
+
+\section{Experimental results}
+La sburra
+
+\begin{thebibliography}{99}
+\bibitem{ref1} L. Lamport, \textit{A Document Preparation System: \LaTeX, User's
+Guide and Reference Manual}. Addison Wesley Publishing Company,
+1986.
+\bibitem{ref2} F. C. Silva e J. J. Sousa, ``Esta referência é apenas um exemplo," ~\textit{Revista de Exemplos}, v. 5, pp. 52--55, Maio
+1999.
+\end{thebibliography}
+
+
+\appendix
+Inserir as informações referentes aos apêndices aqui.
+
+
+\end{document}
