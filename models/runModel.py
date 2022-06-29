@@ -1,12 +1,13 @@
+from ctypes import util
 import getopt,sys
 import datetime
 from minizinc import Instance,Model,Solver
-from optional import Optional
+import MIP.vlsi_MINLP as LP
 import utils
-
+import json
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:vi:t:", ["help", "output=","timeout"])
+        opts, args = getopt.getopt(sys.argv[1:], "ho:rvi:t:", ["help", "output=","timeout=","show-result"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)
@@ -14,15 +15,22 @@ def main():
         sys.exit(2)
     output = None #by default the result is showed in stdout
     verbose = False
+    show=False
+    rotationsAllowed=False
     timeout=None #default timeout 5 minutes
     instn=[]
+
     for o, a in opts:
         if o == "-v":
             verbose = True
+        elif o == "-r":
+            rotationsAllowed = True 
+        elif o == "--show-result":
+            show = True        
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
-        elif o in ("-o", "--output"):
+        elif o in ("-o", "--output="):
             output = a
         elif o in ("-t","--timeout"):
             try: timeout=int(a)
@@ -38,7 +46,7 @@ def main():
                 usage()
                 sys.exit(2)
         else:
-            assert False, "unhandled option"
+            assert False, f"unhandled option \"{o}\""
     
     # check if model name is valid
     if(len(args)<1):
@@ -49,7 +57,7 @@ def main():
     args=[model.upper() for model in args]
     for model in args:
         if model not in ["CP","SAT","SMT","ILP"]:
-            print(f"Error: solving strategy \"{model}\" not recognized")
+            print(f"Error: solving strategy \"{model}\" not recognized. Allowed names are \"CP\",\"SAT\"\"SMT\"\"ILP\"")
             sys.exit(2)
 
     #load problem instances 
@@ -62,13 +70,18 @@ def main():
     options={
         "verbose":verbose,
         "timeout":timeout,
-        "output":output
+        "output":output,
+        "show": show,
+        "rotationsAllowed":rotationsAllowed
     }
 
     # Print useful informations
-    if verbose: print("Verbose output activated")
-    print("Timeout={}".format(timeout if timeout else "Not set"))
     print("Solving instance(s): {}".format(*instn))
+    
+    print("Rotations: "+("allowed" if rotationsAllowed else "not allowed"))
+
+    print("Timeout={}".format(timeout if timeout else "not set"))
+    if verbose: print("Verbose output activated")
     
     # Run the solvers
     functions={
@@ -84,17 +97,22 @@ def main():
             run(instance,options)
 
 def usage(): 
-    print("Usage: python {} [-i instn] [-t timeout] <strategy>".format(sys.argv[0]))
+    print("Usage: python {} [-i instn] [-t timeout] [-v] [-o outfile] <strategy>".format(sys.argv[0]))
 
 def runCPInstance(inst,options):
-    if(options["verbose"]):
+    verbose=False
+    timeout=None
+    if options["verbose"]:
         verbose=True
-    else: verbose=False
     if options["timeout"]:
         timeout=datetime.timedelta(seconds=options["timeout"])
-    else: 
-        timeout=None
+    if options["show"]:
+        show=True
     
+    output=options["output"]          
+    rotationsAllowed=options["rotationsAllowed"]
+
+
     """
     # VERSIONE DI DAVIDE
     vlsi = Model("./CP/vlsi_diffn.mzn")
@@ -105,7 +123,11 @@ def runCPInstance(inst,options):
     instance["dim"]=inst["dim"]
     """
     # VERSIONE DI TOTI
-    vlsi = Model("./CP/vlsi_diffn_clean.mzn")
+    if rotationsAllowed:
+        vlsi = Model("./CP/vlsi_diffn_flip_clean.mzn")
+    else: 
+        vlsi = Model("./CP/vlsi_diffn_clean.mzn")
+
     chuffed=Solver.lookup("chuffed")
     instance=Instance(chuffed,vlsi)
     instance["n"]=inst["n"]
@@ -119,14 +141,17 @@ def runCPInstance(inst,options):
         for key,val in result.statistics.items():
             print(key,"=",val) 
         print("\n__________________")
-
+    if show:
+        utils.show(json.loads(str(result)))
+    if output:
+        utils.write_out(output,str(result))
 
 def runSATInstance(instance,options):
     pass
 def runSMTInstance(instance,options):
     pass
 def runILPInstance(instance,options):
-    pass
+    LP.solveInstance(instance,options)
 
 if __name__=="__main__":
     main()

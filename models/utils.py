@@ -64,3 +64,8 @@ def show(l,**kwargs):
     ax2.set_ylim(-0.5,dim_img_out[1]-0.5)
     ax2.grid(color='k', linestyle='-', linewidth=lw)
     plt.show()
+
+def write_out(filename,to_write):
+    with open(filename,"w") as f:
+        f.write(to_write)
+        f.close()
