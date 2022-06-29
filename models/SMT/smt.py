@@ -27,7 +27,7 @@ def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
     return [*x_width, *y_height, *x_morethan_0, *y_morethan_0]
 
 def no_overlap(Xs, Ys, Ws, Hs, n):
-    n_o = [Or(   Xs[i] + Ws[i] <= Xs[j], 
+    n_o = [Or(  Xs[i] + Ws[i] <= Xs[j], 
                 Xs[i] - Ws[j] >= Xs[j], 
                 Ys[i] + Hs[i] <= Ys[j],
                 Ys[i] - Hs[j] <= Ys[j] ) for i in range(n) for j in range(n)]
