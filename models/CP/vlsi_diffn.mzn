@@ -7,9 +7,9 @@ include "chuffed.mzn";
 % precision (proportional to w) and number of circuits
 
 % toy case
-dim = [|3,3|2,4|2,8|3,9|4,12|];
-n = 5;
-w = 9;
+% dim = [|3,3|2,4|2,8|3,9|4,12|];
+% n = 5;
+% w = 9;
 
 % case 7
 % dim = [|3, 3|3, 4|3, 5|3, 6|3, 7|3, 8|3, 9|5, 4|5, 10|]
@@ -86,8 +86,8 @@ constraint cumulative(pos[1..n,1], dim[1..n,1], dim[1..n,2], l) :: domain;
 
 % break simmetry constraint: pos[i,1] <= w-pos[i,1]-dim[i,1]+1
 var int: i_max = arg_max(area); 
-constraint 2*pos[i_max,1] <= w-dim[i_max,1]+1;
-constraint 2*pos[i_max,2] <= l-dim[i_max,2]+1;
+constraint 2*pos[i_max,1] <= w-dim[i_max,1]+2;
+constraint 2*pos[i_max,2] <= l-dim[i_max,2]+2;
 
 % faster understanding to have found the optimal solution
 var int: empty_space=w*l-sum(area);

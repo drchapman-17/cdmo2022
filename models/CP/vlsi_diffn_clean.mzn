@@ -19,6 +19,12 @@ include "chuffed.mzn";
 % n=73;
 % w=60;
 
+
+% n=22;
+% w=26;
+% w_c=[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4];
+% h_c=[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 19, 3, 4, 5, 7, 8, 11, 14];
+
 % -------------------------- VARIABLES --------------------------
 
 int: w;                               % Width of the silicon plate
@@ -56,22 +62,23 @@ constraint
   diffn (x[1..n], y[1..n], w_c[1..n], h_c[1..n]) :: domain;
 
 
+constraint cumulative(y[1..n], h_c[1..n], w_c[1..n], w) :: domain;
+constraint cumulative(x[1..n], w_c[1..n], h_c[1..n], h) :: domain;
+var int: empty_space=w*h-sum(area);
+constraint empty_space>=0;
+
+
 % ----------------- SIMMETRY BREAKING CONSTRAINTS ----------------- 
 
 % CONSTRAINT 2.1
 % Break simmetry constraint: pos[i,1] <= w-pos[i,1]-dim[i,1]+1
 var int: i_max = arg_max(area); 
 
-% constraint 
-%   2 * x[i_max] <= w - w_c[i_max] + 1;
-% constraint 
-%   2 * y[i_max] <= h - h_c[i_max] + 1;
 constraint 
-  2 * x[i_max] <= w;
+  2 * x[i_max] <= w - w_c[i_max] + 2;
 constraint 
-  2 * y[i_max] <= h;
-
-
+  2 * y[i_max] <= h - h_c[i_max] + 2;
+  
 %%FIXME 
 % constraint 
 %  forall(i,j in 1..n where i!=j) ((x[i]=x[j] /\ w_c[i]=w_c[j])->   (area[i]>area[j]->y[i]<y[j]));

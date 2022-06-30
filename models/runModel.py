@@ -1,24 +1,25 @@
 from ctypes import util
 import getopt,sys
 import datetime
-#from minizinc import Instance,Model,Solver
+from minizinc import Instance,Model,Solver
 import MIP.vlsi_MINLP as LP
 import utils
 import json
-import SMT.smt as SMT
+import SMT.vlsi_SMT as SMT
+
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:rvi:t:", ["help", "output=","timeout=","show-result"])
+        opts, args = getopt.getopt(sys.argv[1:], "ho:rvi:t:", ["help", "output=","export=","timeout=","show-result"])
     except getopt.GetoptError as err:
-        # print help information and exit:
         print(err)
         usage()
         sys.exit(2)
-    output = None #by default the result is showed in stdout
+    output = None # file to which export the solution
+    export= None # file to which export the model
     verbose = False
     show=False
     rotationsAllowed=False
-    timeout=None #default timeout 5 minutes
+    timeout=None 
     instn=[]
 
     for o, a in opts:
@@ -31,13 +32,15 @@ def main():
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
-        elif o in ("-o", "--output="):
+        elif o in ("-o", "--output"):
             output = a
         elif o in ("-t","--timeout"):
             try: timeout=int(a)
             except Exception as e: 
                 print(e)
                 sys.exit(2) 
+        elif o in ("--export"):
+            export = a
         elif o in ("-i"):
             try: 
                 instn=[int(a)]
@@ -73,7 +76,8 @@ def main():
         "timeout":timeout,
         "output":output,
         "show": show,
-        "rotationsAllowed":rotationsAllowed
+        "rotationsAllowed":rotationsAllowed,
+        "export":export
     }
 
     # Print useful informations
@@ -107,14 +111,14 @@ def runCPInstance(inst,options):
         verbose=True
     if options["timeout"]:
         timeout=datetime.timedelta(seconds=options["timeout"])
-    if options["show"]:
-        show=True
     
+    show=options["show"]
     output=options["output"]          
     rotationsAllowed=options["rotationsAllowed"]
 
+    print(inst)
 
-    """
+
     # VERSIONE DI DAVIDE
     vlsi = Model("./CP/vlsi_diffn.mzn")
     chuffed=Solver.lookup("chuffed")
@@ -122,19 +126,20 @@ def runCPInstance(inst,options):
     instance["n"]=inst["n"]
     instance["w"]=inst["w"]
     instance["dim"]=inst["dim"]
-    """
-    # VERSIONE DI TOTI
-    if rotationsAllowed:
-        vlsi = Model("./CP/vlsi_diffn_flip_clean.mzn")
-    else: 
-        vlsi = Model("./CP/vlsi_diffn_clean.mzn")
+    
+    # # VERSIONE DI TOTI
+    # if rotationsAllowed:
+    #     vlsi = Model("./CP/vlsi_diffn_flip_clean.mzn")
+    # else: 
+    #     vlsi = Model("./CP/vlsi_diffn_clean.mzn")
+    # chuffed=Solver.lookup("chuffed")
+    # instance=Instance(chuffed,vlsi)
+    # instance["n"]=inst["n"]
+    # instance["w"]=inst["w"]
+    # instance["w_c"]=[i[0] for i in inst["dim"]]
+    # instance["h_c"]=[i[1] for i in inst["dim"]]
 
-    chuffed=Solver.lookup("chuffed")
-    instance=Instance(chuffed,vlsi)
-    instance["n"]=inst["n"]
-    instance["w"]=inst["w"]
-    instance["w_c"]=[i[0] for i in inst["dim"]]
-    instance["h_c"]=[i[1] for i in inst["dim"]]
+    # SOLVE THE INSTANCE
     result=instance.solve(timeout=timeout,free_search=True)
     print(result)
     if(verbose):
