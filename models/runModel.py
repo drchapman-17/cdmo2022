@@ -1,10 +1,11 @@
 from ctypes import util
 import getopt,sys
 import datetime
-from minizinc import Instance,Model,Solver
+#from minizinc import Instance,Model,Solver
 import MIP.vlsi_MINLP as LP
 import utils
 import json
+import SMT.smt as SMT
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "ho:rvi:t:", ["help", "output=","timeout=","show-result"])
@@ -46,7 +47,7 @@ def main():
                 usage()
                 sys.exit(2)
         else:
-            assert False, f"unhandled option \"{o}\""
+            assert False, "unhandled option \"{}\"".format(o)
     
     # check if model name is valid
     if(len(args)<1):
@@ -57,7 +58,7 @@ def main():
     args=[model.upper() for model in args]
     for model in args:
         if model not in ["CP","SAT","SMT","ILP"]:
-            print(f"Error: solving strategy \"{model}\" not recognized. Allowed names are \"CP\",\"SAT\"\"SMT\"\"ILP\"")
+            print("Error: solving strategy \"{}\" not recognized. Allowed names are \"CP\",\"SAT\"\"SMT\"\"ILP\"".format(model))
             sys.exit(2)
 
     #load problem instances 
@@ -148,8 +149,10 @@ def runCPInstance(inst,options):
 
 def runSATInstance(instance,options):
     pass
+
 def runSMTInstance(instance,options):
-    pass
+    SMT.solveInstance(instance,options)
+
 def runILPInstance(instance,options):
     LP.solveInstance(instance,options)
 

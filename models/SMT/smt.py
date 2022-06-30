@@ -26,17 +26,33 @@ def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
 
     return [*x_width, *y_height, *x_morethan_0, *y_morethan_0]
 
-def no_overlap(Xs, Ys, Ws, Hs, n):
-    n_o = [Or(  Xs[i] + Ws[i] <= Xs[j], 
-                Xs[i] - Ws[j] >= Xs[j], 
-                Ys[i] + Hs[i] <= Ys[j],
-                Ys[i] - Hs[j] <= Ys[j] ) for i in range(n) for j in range(n)]
-    return n_o
+def no_overlap(Xs, Ys, Xij, Yij, Ws, Hs, W, H, n):
+    no_1 = [ Xs[i] + Ws[i] <= Xs[j] + W*(Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
+    no_2 = [ Xs[i] - Ws[j] >= Xs[j] - W*(1 - Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
+    no_3 = [ Ys[i] + Hs[i] <= Ys[j] + H*(1 + Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
+    no_4 = [ Ys[i] - Hs[j] >= Ys[j] - H*(2 - Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
+    return [*no_1,*no_2,*no_3,*no_4]
+
+def boundary_constraints_rotation(Xs, Ys, Ws, Hs, W, d, n):
+    pass
 
 
-def main():
+def solveInstance(instance, options):
+
+    verbose=False
+    timeout=None
+    # if options["verbose"]:
+    #     verbose=True
+    # if options["timeout"]:
+    #     timeout=options["timeout"] # passare a script di amadini
+    # if options["show"]:
+    #     show=True
+    
+    # output=options["output"]          
+    # rotationsAllowed=options["rotationsAllowed"]
+
     #load instance (Dictionary: n, m , dim)
-    instance = loadInstance(1)
+    #instance = loadInstance(instance_number)
 
     n = instance['n']
     w = instance['w']
@@ -60,28 +76,61 @@ def main():
     d = Int('d')
 
     #Solver Declaration
-    s = Solver()
-
+    #s = Solver()
+    opt = Optimize()
     #Height is >= 0
-    s.add(d>0)
-
+    #s.add(d>0)
+    opt.add(d>0)
+    rotationsAllowed=False
+    ## IF NO ROTATION
     # Boundary constraints for each block
-    bc = boundary_constraints(X, Y, widths, heights, d, W, n)
-    s.add(bc)
+    if rotationsAllowed:
+        pass
+    else:
+        bc = boundary_constraints(X, Y, widths, heights, d, W, n)
+        #s.add(bc)
+        opt.add(bc)
+        Xij = [Int('x{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
+        Yij = [Int('y{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
 
-    # No overlapping constraints
-    no = no_overlap(X, Y, widths, heights, n)
-    s.add(no)
+        # # Xij = IntVector('x', n, n)
+        # # Yij = IntVector('y', n, n)
+        # print(Xij)
+        # #Boolean Restriction
+        x_bool0 = [x>=0 for x in Xij]
+        y_bool0 = [y>=0 for y in Yij]
+        x_bool1 = [x<=1 for x in Xij]
+        y_bool1 = [y<=1 for y in Yij]
+        opt.add([*x_bool0,*y_bool0,*x_bool1,*y_bool1])
+        # No overlapping constraints
+        no = no_overlap(X, Y, Xij, Yij, widths, heights, W, H, n)
+        #s.add(no)
+        opt.add(no)
 
-    #print(s.check())
-    #print(s.model())
-    with open("prova.smt2", 'w') as outfile:
+    # IF ROTATION
+
+    # VERBOSE
+    if verbose:
+        #print(s.check())
+        #print(s.model())
+        pass
+
+    h = opt.minimize(d)
+    print(opt.check())
+    print(opt.lower(h))
+    print(opt.model())
+    with open("temp/model.smt2", 'w') as outfile:
         
-        for line in s.sexpr():
+        for line in opt.sexpr():
             outfile.write(line)
         outfile.write("(check-sat)")
+
+    ## SCRIPT DI AMADINI CON OPZIONI
+
+    
             
 
 
 if __name__=="__main__":
-    main()
+    solveInstance(loadInstance(10), {})
+
