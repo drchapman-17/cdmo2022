@@ -8,6 +8,40 @@ sys.path.insert(0, currentdir)
 from vlsi_MINLP_problem import VLSI_Problem
 import utils
 
+def solveInstance(instance,options):
+    verbose=False
+    show=False
+    timeout=None
+    rotationsAllowed=False
+
+    if options["verbose"]:
+        verbose=True
+    if options["timeout"]:
+        timeout=options["timeout"] 
+    if options["show"]:
+        show=True  
+    rotationsAllowed=options["rotationsAllowed"]
+    output=options["output"]
+
+    print("Instance:")
+    for key,val in instance.items():
+        print(f"{key} = {val}")
+    problem=VLSI_Problem(instance,rotationsAllowed)
+    print("Solving..",end="")
+    problem.solve(timeLimit=timeout,verbose=verbose)  
+    print("Solved!\nStatus:", problem.getStatusMessage())
+    solution=problem.getSolution()
+    if(solution):
+        print("Solution:",solution)
+        if(show):
+            utils.show(solution)
+    if(output):
+        utils.write_out(output,str(solution))
+
+def usage():
+    print("Usage: python {} [-v] [-t timeout] [-i infile] [-o outfile] [instn]".format(sys.argv[0].split("\\")[-1].split("/")[-1]))
+
+
 def main():
 
     output = None #by default the result is showed in stdout
@@ -82,39 +116,6 @@ def main():
     }
 
     solveInstance(instance,options)
-
-def solveInstance(instance,options):
-    verbose=False
-    show=False
-    timeout=None
-    rotationsAllowed=False
-
-    if options["verbose"]:
-        verbose=True
-    if options["timeout"]:
-        timeout=options["timeout"] 
-    if options["show"]:
-        show=True  
-    rotationsAllowed=options["rotationsAllowed"]
-    output=options["output"]
-
-    print("Instance:")
-    for key,val in instance.items():
-        print(f"{key} = {val}")
-    problem=VLSI_Problem(instance,rotationsAllowed)
-    print("Solving..",end="")
-    problem.solve(timeLimit=timeout,verbose=verbose)  
-    print("Solved!\nStatus:", problem.getStatusMessage())
-    solution=problem.getSolution()
-    if(solution):
-        print("Solution:",solution)
-        if(show):
-            utils.show(solution)
-    if(output):
-        utils.write_out(output,str(solution))
-
-def usage():
-    print("Usage: python {} [-v] [-t timeout] [-i infile] [-o outfile] [instn]".format(sys.argv[0].split("\\")[-1].split("/")[-1]))
 
 if __name__=="__main__":
     main()
