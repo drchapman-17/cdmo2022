@@ -123,7 +123,7 @@ def solveInstance(instance, options):
         
         for line in opt.sexpr():
             outfile.write(line)
-        outfile.write("(check-sat)")
+        outfile.write("(get-objectives)\n(exit)")
 
     ## SCRIPT DI AMADINI CON OPZIONI
 
@@ -132,5 +132,7 @@ def solveInstance(instance, options):
 
 
 if __name__=="__main__":
-    solveInstance(loadInstance(10), {})
+
+    solveInstance(loadInstance(15), {})
+    
 
