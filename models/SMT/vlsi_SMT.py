@@ -1,4 +1,3 @@
-from ctypes import util
 import os,sys,inspect,getopt
 from pathlib import Path
 from z3 import *
@@ -7,7 +6,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, currentdir) 
 import utils
-import json
 
 def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
 
