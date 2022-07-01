@@ -1,3 +1,5 @@
+(set-option:produce-models true)
+
 (declare-fun d () Int)
 (declare-fun x__0 () Int)
 (declare-fun x__1 () Int)
@@ -1860,6 +1862,8 @@
   (>= (- y__11 14) a!1)))
 (assert (let ((a!1 (- y__10 (* 76 (- (- 2 x11_10) y11_10)))))
   (>= (- y__11 3) a!1)))
+
 (minimize d)
 (check-sat)
-(check-sat)
+(get-objectives)
+(exit)
