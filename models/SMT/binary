@@ -1,0 +1,17 @@
+Fissi LB come (somma di tutte le aree dei blocchi)/larghezza Chip
+Fissi UB 2 * Max(Altezza blocco con area più grande, LB)
+
+o = (LB+UB)/2
+
+while LB<UB
+
+    check sat con d=o
+
+    se è sat:
+        UB diventa o
+    altrimenti
+        LB+1
+
+    o = LB+B/2
+    
+return o
