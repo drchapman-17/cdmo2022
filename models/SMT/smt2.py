@@ -153,7 +153,7 @@ def buildModel(instance, o):
 
     #Solver Declaration
 
-    s =  Solver()
+    s =  SolverFor("QF-LIA")
     #Height is >= 0
     #s.add(d>0)
 
@@ -167,6 +167,8 @@ def buildModel(instance, o):
             if i!=largest_block else And(0 <= Y[i], 2*Y[i] <= d-heights[i]) 
             for i in range(n)])
 
+    #s.add(X[largest_block]==0)
+    #s.add(Y[largest_block]==0)
     # Largest block constraint
     # s.add(And(0 <= X[largest_block], 2*X[largest_block] <= W-widths[largest_block]))
     # s.add(And(0 <= Y[largest_block], 2*Y[largest_block] <= d-heights[largest_block]))
@@ -254,7 +256,7 @@ def bisection(instance):
 if __name__=="__main__":
     #with open("report", 'w') as outfile:
     #     outfile.write("REPORT:\n\n")
-    for i in range(1,20):
+    for i in range(40,41):
         print("SOLVING: ", i)
         instance = loadInstance(i)
         print(instance)
