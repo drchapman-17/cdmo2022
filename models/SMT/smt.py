@@ -1,6 +1,6 @@
 from z3 import *
-from cumulative import cumulative
 from time import time
+import numpy as np
 
 # ROBA RUBATA
 def z3_cumulative(start, duration, resources, total):
@@ -13,23 +13,21 @@ def z3_cumulative(start, duration, resources, total):
         )
     return decomposition
 
-def format_solution(opt, dim, n, W, h):
-    m = opt.model()
-    nicer = sorted ([(d, m[d]) for d in m], key = lambda x: str(x[0]))
-    dict = {str(l[0]):l[1] for l in nicer if str(l[0]).startswith("x__") or str(l[0]).startswith("y__")}
+def format_solution(m, o, dim, n, W):
 
-    print(dict)
+    schema = []
+    if m != None:
+        nicer = sorted ([(d, m[d]) for d in m], key = lambda x: str(x[0]))
+        dict = {str(l[0]):l[1] for l in nicer if str(l[0]).startswith("x__") or str(l[0]).startswith("y__")}
 
-    print(n)
-    blockpos = []
-    for i in range(n):
-        blockpos.append([int(str(dict['x__{}'.format(i)]))+1,int(str(dict['y__{}'.format(i)]))+1])
+        blockpos = []
+        for i in range(n):
+            blockpos.append([int(str(dict['x__{}'.format(i)]))+1,int(str(dict['y__{}'.format(i)]))+1])
 
-    #print(blockpos)
-    schema = [[W,opt.lower(h)]]
+        schema = [[W,o]]
 
-    for i in range(n):
-        schema.append([*dim[i], *blockpos[i]])
+        for i in range(n):
+            schema.append([*dim[i], *blockpos[i]])
 
     return schema
 
@@ -38,6 +36,7 @@ def distinct_coordinates(Xs, Ys, W, n):
     diff = [ W*Xs[i]+Ys[i]  for i in range(n)]
 
     return Distinct(diff)
+
 
 def loadInstance(number):
 
@@ -97,38 +96,26 @@ def no_overlap2(Xs, Ys, Ws, Hs, W, H, n):
 
     return no
 
-# def no_overlap3(Xs, Ys, Ws, Hs, W, H, n):
-#     no=[]
-#     for i in range(n):
-#         for j in range(n):
-#             A = And(
-#                             Xs[i] + Ws[i] <= Xs[j], 
-#                             Xs[i] - Ws[j] >= Xs[j] - W, 
-#                             Ys[i] + Hs[i] <= Ys[j] + H, 
-#                             Ys[i] - Hs[j] >= Ys[j] - 2*H)
-
-#             B = And(
-#                             Xs[i] + Ws[i] <= Xs[j] + W, 
-#                             Xs[i] - Ws[j] >= Xs[j] - 2*W, 
-#                             Ys[i] + Hs[i] <= Ys[j], 
-#                             Ys[i] - Hs[j] >= Ys[j] - H)
-
-#             C = And(
-#                             Xs[i] + Ws[i] <= Xs[j] + W, 
-#                             Xs[i] - Ws[j] >= Xs[j], 
-#                             Ys[i] + Hs[i] <= Ys[j] + 2*H, 
-#                             Ys[i] - Hs[j] >= Ys[j] - H)
-#             D = And(
-#                             Xs[i] + Ws[i] <= Xs[j] + 2*W, 
-#                             Xs[i] - Ws[j] >= Xs[j] - W, 
-#                             Ys[i] + Hs[i] <= Ys[j] + H, 
-#                             Ys[i] - Hs[j] >= Ys[j])
-#             no.append(And(Or(A,B,C,D), Not(And(A,B)),Not(And(A,C)), Not(And(A,D)), Not(And(B,C)), Not(And(B,D), Not(And(C,D)))))            
-
-#     return no
-
-    
-#     return [*no_1,*no_2,*no_3,*no_4]
+def reduce_domain_largest_rectangle(Xs, Ys, Ws, Hs, W, H, n):
+    no = [ Or(
+                And(
+                    Xs[i] - Ws[j] >= Xs[j] - W, 
+                    Ys[i] + Hs[i] <= Ys[j] + H, 
+                    Ys[i] - Hs[j] >= Ys[j] - 2*H),
+                And(
+                    Xs[i] - Ws[j] >= Xs[j] - 2*W, 
+                    Ys[i] + Hs[i] <= Ys[j], 
+                    Ys[i] - Hs[j] >= Ys[j] - H),
+                And(
+                    Xs[i] - Ws[j] >= Xs[j], 
+                    Ys[i] + Hs[i] <= Ys[j] + 2*H, 
+                    Ys[i] - Hs[j] >= Ys[j] - H),
+                And(
+                    Xs[i] + Ws[i] <= Xs[j] + 2*W, 
+                    Xs[i] - Ws[j] >= Xs[j] - W, 
+                    Ys[i] + Hs[i] <= Ys[j] + H, 
+                    Ys[i] - Hs[j] >= Ys[j])
+                ) for i in range(n) for j in range(n) if i!=j ]
 
 def boundary_constraints_rotation(Xs, Ys, Ws, Hs, W, d, n):
     pass
@@ -138,24 +125,13 @@ def buildModel(instance, o):
 
     verbose=False
     timeout=None
-    # if options["verbose"]:
-    #     verbose=True
-    # if options["timeout"]:
-    #     timeout=options["timeout"] # passare a script di amadini
-    # if options["show"]:
-    #     show=True
     
-    # output=options["output"]          
-    # rotationsAllowed=options["rotationsAllowed"]
-
-    #load instance (Dictionary: n, m , dim)
-    #instance = loadInstance(instance_number)
-
-
-
     n = instance['n']
     w = instance['w']
     dim = instance['dim']
+
+    #Largest block symmetry break
+    largest_block = np.argmax([d[0]*d[1] for d in dim ])
 
     # Height: sum of all blocks heights
     H = sum([int(dim[i][1]) for i in range(n)])
@@ -176,34 +152,24 @@ def buildModel(instance, o):
     d = o
 
     #Solver Declaration
-    #s = Solver()
-    #opt = Optimize()
 
-    s =  SolverFor("QF_LIA")
+    s =  Solver()
     #Height is >= 0
     #s.add(d>0)
 
+    #Boundary
     # Max X Domain
-    s.add([And(0 <= X[i], X[i] <= W-widths[i]) for i in range(n)])
+    s.add([And(0 <= X[i], X[i] <= W-widths[i]) 
+            if i!=largest_block else And(0 <= X[i], 2*X[i] <= W-widths[i]) 
+            for i in range(n)])
     # Max Y Domain
-    s.add([And(0 <= Y[i], Y[i] <= d-heights[i]) for i in range(n)])
+    s.add([And(0 <= Y[i], Y[i] <= d-heights[i]) 
+            if i!=largest_block else And(0 <= Y[i], 2*Y[i] <= d-heights[i]) 
+            for i in range(n)])
 
-    #opt.add([Y[i] <= d-heights[i] for i in range(n)])
-
-    # Cumulative
-
-    # cumulative(s, X, widths, heights, d, 0, W)
-    # cumulative(s, Y, heights, widths, W, 0, H)
-
-    # cumulative_y = z3_cumulative(Y, heights, widths, W)
-    # s.add(cumulative_y)
-    # cumulative_x = z3_cumulative(X, widths, heights, H)
-    # s.add(cumulative_x)
-    # #Distinct coordinates
-    #s.add(distinct_coordinates(X, Y, W, n))
-    #s.add(d>0)
-
-
+    # Largest block constraint
+    # s.add(And(0 <= X[largest_block], 2*X[largest_block] <= W-widths[largest_block]))
+    # s.add(And(0 <= Y[largest_block], 2*Y[largest_block] <= d-heights[largest_block]))
 
     rotationsAllowed=False
     ## IF NO ROTATION
@@ -211,23 +177,6 @@ def buildModel(instance, o):
     if rotationsAllowed:
         pass
     else:
-        #bc = boundary_constraints(X, Y, widths, heights, W, d, n)
-        #s.add(bc)
-        #s.add(bc)
-        #Xij = [Int('x{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
-        #Yij = [Int('y{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
-
-        # # Xij = IntVector('x', n, n)
-        # # Yij = IntVector('y', n, n)
-        # print(Xij)
-        # #Boolean Restriction
-        # x_bool0 = [x>=0 for x in Xij]
-        # y_bool0 = [y>=0 for y in Yij]
-        # x_bool1 = [x<=1 for x in Xij]
-        # y_bool1 = [y<=1 for y in Yij]
-        # opt.add([*x_bool0,*y_bool0,*x_bool1,*y_bool1])
-        # No overlapping constraints
-        #no = no_overlap(X, Y, Xij, Yij, widths, heights, W, H, n)
         no = no_overlap2(X, Y, widths, heights, W, H, n)
         #s.add(no)
         s.add(no)
@@ -273,44 +222,51 @@ def bisection(instance):
 
     UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
 
-    
+    m=None
+
     print('lb', LB)
 
     print('ub', UB)
 
     o = int((LB+UB)/2)
 
-    while LB<UB and time()-init<301:
+    while LB<UB and (time()-init)<301:
         
         s = buildModel(instance, o)
-        s.set("timeout", 300)
+
         if(s.check() == sat):
-            
+            m = s.model()
             UB = o
-            #print("sat, UB:", UB)
+            print("sat, UB:", UB)
         else:
             LB = o +1
-            #print("unsat, LB:", LB)
+            print("unsat, LB:", LB)
         
         o = int((LB+UB)/2)
         #print("O:",o)
 
     print(time()-init)
-    print(s.check())
-    #s.check()
-    m = s.model()
+    #m = None
+    #if s.check()==sat:
+    #    m = s.model()
     return o, m, time()-init
 
 if __name__=="__main__":
-    # with open("report", 'w') as outfile:
+    #with open("report", 'w') as outfile:
     #     outfile.write("REPORT:\n\n")
-    i=15
-    o, m, t = bisection(loadInstance(i))
-    if(t<300):
-        with open("report", 'a') as outfile:
-            outfile.write("Instance:{}  Height:{}  Time:{}\n".format(i,o,t))
-    else:
-        with open("report", 'w') as outfile:
-            outfile.write("Instance:{}  Height:NO  Time:{}\n".format(i,t))
-    #print("Finished in:", t)    
+    for i in range(1,20):
+        print("SOLVING: ", i)
+        instance = loadInstance(i)
+        print(instance)
+        o, m, t = bisection(instance)
+
+        print(format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+
+        if(t<300):
+            with open("report", 'a') as outfile:
+                outfile.write("Instance:{}  Height:{}  Time:{}\n".format(i,o,t))
+        else:
+            with open("report", 'a') as outfile:
+                outfile.write("Instance:{}  Height:NO  Time:{}\n".format(i,t))
+        print("Finished in:", t)    
 

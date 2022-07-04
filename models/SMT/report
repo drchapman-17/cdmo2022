@@ -1,14 +1,44 @@
 REPORT:
 
-Instance:1  Height:8  Time:0.19745278358459473
-Instance:2  Height:9  Time:0.25203895568847656
-Instance:3  Height:10  Time:0.33925509452819824
-Instance:4  Height:11  Time:0.4680054187774658
-Instance:5  Height:12  Time:0.6746714115142822
-Instance:6  Height:13  Time:0.7827441692352295
-Instance:7  Height:14  Time:0.8722736835479736
-Instance:8  Height:15  Time:1.5356853008270264
-Instance:9  Height:16  Time:1.318039894104004
-Instance:10  Height:17  Time:1.951540231704712
-Instance:12  Height:21  Time:2.3218982219696045
-Instance:13  Height:21  Time:2.91401743888855
+Instance:1  Height:8  Time:0.22339129447937012
+Instance:2  Height:9  Time:0.2543604373931885
+Instance:3  Height:10  Time:0.360687255859375
+Instance:4  Height:11  Time:0.5232582092285156
+Instance:5  Height:12  Time:0.6226005554199219
+Instance:6  Height:13  Time:0.9192445278167725
+Instance:7  Height:14  Time:0.8535692691802979
+Instance:8  Height:15  Time:1.5757086277008057
+Instance:9  Height:16  Time:1.4424116611480713
+Instance:10  Height:17  Time:2.3859620094299316
+Instance:11  Height:18  Time:5.128947973251343
+Instance:12  Height:19  Time:2.894573926925659
+Instance:13  Height:20  Time:2.793271064758301
+Instance:14  Height:21  Time:3.951765537261963
+Instance:15  Height:22  Time:5.435582160949707
+Instance:16  Height:23  Time:6.775611877441406
+Instance:17  Height:24  Time:5.9383227825164795
+Instance:18  Height:25  Time:7.85623025894165
+Instance:19  Height:26  Time:35.830933570861816
+Instance:20  Height:27  Time:26.09865403175354
+Instance:21  Height:28  Time:27.013452529907227
+Instance:22  Height:29  Time:69.65255403518677
+Instance:23  Height:30  Time:19.412898778915405
+Instance:24  Height:31  Time:8.635489463806152
+Instance:25  Height:32  Time:72.16958928108215
+Instance:26  Height:33  Time:40.51831078529358
+Instance:27  Height:34  Time:36.11056852340698
+Instance:28  Height:35  Time:26.12897562980652
+Instance:29  Height:36  Time:28.29879355430603
+Instance:30  Height:37  Time:120.67074871063232
+Instance:31  Height:38  Time:9.749130249023438
+Instance:32  Height:NO  Time:425.2027368545532
+Instance:33  Height:40  Time:11.209956169128418
+Instance:34  Height:40  Time:106.03711414337158
+Instance:35  Height:40  Time:112.75705981254578
+Instance:36  Height:40  Time:79.46840333938599
+Instance:37  Height:60  Time:156.08437490463257
+Instance:38  NO
+Instance:39  Height:60  Time:96.65304017066956
+Instance:40  Height:NO  Time:303.3105790615082
+
+
