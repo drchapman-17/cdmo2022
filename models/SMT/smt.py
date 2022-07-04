@@ -1,7 +1,14 @@
 from z3 import *
 from time import time
 import numpy as np
-
+import os,sys 
+import inspect
+import getopt
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+sys.path.insert(0, currentdir) 
+import utils
 # ROBA RUBATA
 def z3_cumulative(start, duration, resources, total):
 
@@ -36,23 +43,6 @@ def distinct_coordinates(Xs, Ys, W, n):
     diff = [ W*Xs[i]+Ys[i]  for i in range(n)]
 
     return Distinct(diff)
-
-
-def loadInstance(number):
-
-    with open(f"/home/stefano/cdmo2022/models/instances/ins-{number}.txt") as f:
-        lines=f.readlines()
-        w=int(lines[0])
-        n=int(lines[1])
-        elements=[]
-        for i in range(n):
-            x,y=lines[2+i].split()
-            x=int(x)
-            y=int(y)
-            elements.append([x,y])
-
-    return {"n":n,"w":w,"dim":elements}
-
 
 def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
 
@@ -254,21 +244,29 @@ def bisection(instance):
     return o, m, time()-init
 
 if __name__=="__main__":
+<<<<<<< HEAD:models/SMT/smt2.py
     #with open("report", 'w') as outfile:
     #     outfile.write("REPORT:\n\n")
     for i in range(40,41):
+=======
+    filename=currentdir+"/report2.txt"
+    with open(filename, 'w') as outfile:
+        outfile.write("REPORT2:\n\n")
+    for i in range(1,41):
+>>>>>>> 5ae5004d372a4814f106197bac47e9c8d9dfe525:models/SMT/smt.py
         print("SOLVING: ", i)
-        instance = loadInstance(i)
+        instance = utils.loadInstance(currentdir+f"/../instances/ins-{i}.txt")
+
         print(instance)
         o, m, t = bisection(instance)
 
         print(format_solution(m, o, instance['dim'], instance['n'], instance['w']))
 
         if(t<300):
-            with open("report", 'a') as outfile:
+            with open(filename, 'a') as outfile:
                 outfile.write("Instance:{}  Height:{}  Time:{}\n".format(i,o,t))
         else:
-            with open("report", 'a') as outfile:
+            with open(filename, 'a') as outfile:
                 outfile.write("Instance:{}  Height:NO  Time:{}\n".format(i,t))
         print("Finished in:", t)    
 

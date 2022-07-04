@@ -65,7 +65,37 @@ def show(l,**kwargs):
     ax2.grid(color='k', linestyle='-', linewidth=lw)
     plt.show()
 
+
+def isFeasible(sol): 
+    w=sol[0][0] 
+    h=sol[0][1]
+    rest=sol[1:]
+    n=len(rest)
+    for i in range(n):
+        e1=rest[i]
+        if e1[0]<=0 or e1[1]<=0: return False 
+        #if e1[2]<0 or e1[3]<0 or e1[2]+e1[0]>w or e1[3]+e1[1]>h: return False 
+        for j in range(n):
+            if i!=j:
+                e2=rest[j]
+                # if e2[2]<=e1[2]<=e2[2]+e2[0]:
+                #     if e2[3]<=e1[3]<=e2[3]+e2[1]:
+                #         return False            
+                if (e1[2] < e2[2]+e2[0] and e1[2]+e1[0] > e2[2] and e1[3]+e1[1] > e1[3] and e1[3] < e2[3]+e2[1] ): 
+                    print(e1,e2)
+
+                    print(f"{i} and {j} overlap")
+                    return False 
+
+    return True
+
 def write_out(filename,to_write):
     with open(filename,"w") as f:
         f.write(to_write)
         f.close()
+
+if __name__=="__main__":
+    sol=[[8, 8], [3, 3, 1, 6], [3, 5, 6, 1], [5, 3, 4, 6], [5, 5, 1, 1]]
+
+    print(isFeasible(sol))
+    
