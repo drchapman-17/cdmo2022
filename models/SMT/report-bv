@@ -1,0 +1,17 @@
+REPORT2 LRA 3*(LB/2) i!=j:
+
+Instance:1  Height:8  Time:0.20807528495788574
+Instance:2  Height:9  Time:0.2738795280456543
+Instance:3  Height:10  Time:0.30344367027282715
+Instance:4  Height:11  Time:0.49007177352905273
+Instance:5  Height:12  Time:0.5566682815551758
+Instance:6  Height:13  Time:0.6857964992523193
+Instance:7  Height:14  Time:0.6513562202453613
+Instance:8  Height:15  Time:0.8703558444976807
+Instance:9  Height:16  Time:1.2096166610717773
+Instance:10  Height:17  Time:2.2906594276428223
+Instance:11  Height:18  Time:10.659858465194702
+Instance:12  Height:19  Time:3.2940492630004883
+Instance:13  Height:20  Time:2.3459415435791016
+Instance:14  Height:21  Time:2.8028481006622314
+Instance:15  Height:22  Time:3.3339569568634033

@@ -1,3 +1,4 @@
+from math import log2
 from socket import timeout
 from z3 import *
 from cvc5 import pythonic
@@ -134,7 +135,8 @@ def buildModel(instance, o):
     # Block Position Vectors
     X = IntVector('x', n)
     Y = IntVector('y', n)
-    
+    #X = [ BitVec('x__{}'.format(i), int(log2(H))) for i in range(n)]
+    #Y = [ BitVec('y__{}'.format(i), int(log2(H))) for i in range(n)]
 
     # Block widths and heights
     widths = [d[0] for d in dim]
@@ -145,8 +147,8 @@ def buildModel(instance, o):
     
     #Solver Declaration
 
-    #s =  SolverFor("LIA")
-    s = Tactic('lra').solver()
+    s =  SolverFor('ALL')
+    #s = Tactic('qfbv').solver()
     #s = pythonic.SolverFor("LRA")
     #Height is >= 0
     #s.add(d>0)
@@ -237,6 +239,7 @@ def bisection(instance):
             UB = o
             if(LB==UB):
                 m = s.model()
+
             print("sat, UB:", UB)
         else:
             LB = o +1
@@ -252,8 +255,8 @@ def bisection(instance):
     return o, m, time()-init
 
 if __name__=="__main__":
-    filename=currentdir+"/report2"
-    with open(filename, 'a') as outfile:
+    filename=currentdir+"/report-bv"
+    with open(filename, 'w') as outfile:
         outfile.write("REPORT2 LRA 3*(LB/2) i!=j:\n\n")
     for i in range(1,41):
         print("SOLVING: ", i)
