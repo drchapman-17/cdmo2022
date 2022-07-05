@@ -89,13 +89,56 @@ def isFeasible(sol):
 
     return True
 
+def isRectangleOverlap(R1, R2):
+    if (R1[0]>=R2[2]) or (R1[2]<=R2[0]) or (R1[3]<=R2[1]) or(R1[1]>=R2[3]):
+        return False
+    else:
+        return True
+
+def overlap(x1,y1,w1,h1,res):
+    for b in res:
+        x2=b[2]
+        y2=b[3]
+        w2=b[0]
+        h2=b[1]
+
+        if isRectangleOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2]): return True
+    return False
+
+def computeMostStupidSolution(instance):
+    n=instance['n']
+    W=instance['w']
+    dim=instance['dim']
+    dim=sorted(dim, key=lambda b:(b[1],b[0]) ,reverse=True)
+    p=[d[0] for d in dim]
+    q=[d[1] for d in dim]
+    res=[]
+    res.append([p[0],q[0],0,0])
+    for i in range(1,n):
+        appended=False
+        x=0
+        y=0
+        while not appended:
+            if overlap(x,y,p[i],q[i],res):
+                if(x>W-p[i]):
+                    x=0
+                    y+=1
+                else:
+                    x+=1
+            else: 
+                res.append([p[i],q[i],x,y])
+                appended=True
+    H=max([b[1]+b[3] for b in res])
+    sol=[[W,H]]+[[r[0],r[1],r[2]+1,r[3]+1]for r in res]
+    return sol
+
 def write_out(filename,to_write):
     with open(filename,"w") as f:
         f.write(to_write)
         f.close()
 
 if __name__=="__main__":
-    sol=[[8, 8], [3, 3, 1, 6], [3, 5, 6, 1], [5, 3, 4, 6], [5, 5, 1, 1]]
-
-    print(isFeasible(sol))
-    
+    for i in range(1,41):
+        ins=loadInstance(f"instances/ins-{i}.txt")
+        ub=computeMostStupidSolution(ins)[0][1]
+        print(f"Ins{i}: ub={ub}")
