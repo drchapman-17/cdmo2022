@@ -89,13 +89,58 @@ def isFeasible(sol):
 
     return True
 
+def computeUpperBound(instance):
+    def isRectangleOverlap(R1, R2):
+        if (R1[0]>=R2[2]) or (R1[2]<=R2[0]) or (R1[3]<=R2[1]) or(R1[1]>=R2[3]):
+            return False
+        else:
+            return True
+
+    def overlap(x1,y1,w1,h1,res):
+        for b in res:
+            x2=b[2]
+            y2=b[3]
+            w2=b[0]
+            h2=b[1]
+
+            if isRectangleOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2]): return True
+        return False
+
+    n=instance['n']
+    W=instance['w']
+    dim=instance['dim']
+    p=[d[0] for d in dim]
+    q=[d[1] for d in dim]
+
+    res=[]
+    res.append([p[0],q[0],0,0])
+    for i in range(1,n):
+        appended=False
+        x=0
+        y=0
+        while not appended:
+            if overlap(x,y,p[i],q[i],res):
+                if(x>W-p[i]):
+                    x=0
+                    y+=1
+                else:
+                    x+=1
+            else: 
+                res.append([p[i],q[i],x,y])
+                appended=True
+    H=max([b[1]+b[3] for b in res])
+    return H
+
 def write_out(filename,to_write):
     with open(filename,"w") as f:
         f.write(to_write)
         f.close()
 
 if __name__=="__main__":
-    sol=[[8, 8], [3, 3, 1, 6], [3, 5, 6, 1], [5, 3, 4, 6], [5, 5, 1, 1]]
-
-    print(isFeasible(sol))
-    
+    for i in range(1,41):
+        ins=loadInstance(f"instances/ins-{i}.txt")
+    # print("N={};\nWC={};\np={};\nq={};".format(ins['n'],ins['w'],[d[0] for d in ins['dim']],[d[1] for d in ins['dim']]))
+        ub=computeUpperBound(ins)
+    # l=[[60, 90], [34, 6, 1, 1], [13, 3, 1, 1], [13, 5, 1, 1], [10, 12, 1, 1], [10, 12, 1, 1], [6, 7, 1, 1], [6, 15, 1, 1], [25, 7, 1, 1], [25, 15, 1, 1], [21, 12, 1, 1], [16, 7, 1, 1], [16, 5, 1, 1], [21, 3, 1, 1], [21, 5, 1, 1], [5, 7, 1, 1], [5, 5, 1, 1], [4, 1, 1, 1], [4, 10, 1, 1], [6, 13, 1, 1], [12, 13, 1, 1], [12, 9, 1, 1], [23, 6, 1, 1], [7, 3, 1, 1], [7, 5, 1, 1], [2, 1, 1, 1], [2, 10, 1, 1], [6, 6, 1, 1], [6, 5, 1, 1], [14, 7, 1, 1], [14, 6, 1, 1], [16, 3, 1, 1], [16, 5, 1, 1], [14, 6, 1, 1], [14, 5, 1, 1], [14, 13, 1, 1], [3, 2, 1, 1], [3, 7, 1, 1], [11, 2, 1, 1], [11, 7, 1, 1], [6, 7, 1, 1], [6, 6, 1, 1], [33, 14, 1, 1], [12, 4, 1, 1], [12, 3, 1, 1], [16, 18, 1, 1], [12, 3, 1, 1], [12, 18, 1, 1], [4, 4, 1, 1], [4, 3, 1, 1], [3, 1, 1, 1], [3, 2, 1, 1], [6, 9, 1, 1], [6, 9, 1, 1], [6, 1, 1, 1], [6, 2, 1, 1], [5, 7, 1, 1], [5, 18, 1, 1], [3, 9, 1, 1], [3, 9, 1, 1], [9, 18, 1, 1], [6, 5, 1, 1], [6, 2, 1, 1], [2, 12, 1, 1], [2, 9, 1, 1], [8, 3, 1, 1], [8, 9, 1, 1], [10, 9, 1, 1], [3, 5, 1, 1], [3, 2, 1, 1], [3, 18, 1, 1], [3, 7, 1, 1], [2, 3, 1, 1], [2, 9, 1, 1]]
+        print(f"Ins{i}: ub={ub}")
+    # show(,lw=0)
