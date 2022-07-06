@@ -9,6 +9,7 @@ include "chuffed.mzn";
 int: w;                                             % width of the silicon plate
 int: n;                                             % number of circuits
 array[1..n,1..2] of int: dim;                       % dimensions of circuits
+array[1..n,1..2] of var 1..max(w,max_l): pos;       % position of the circuits
 var int: l=max([pos[i,2] + dim[i,2] |i in 1..n])-1; % length of the silicon plate
 array[1..n] of var int: area;                       % area of the circuits
 
@@ -19,7 +20,6 @@ constraint forall(i in 1..n)(area[i]=dim[i,1]*dim[i,2]);
 
 % upper bound for l
 int: max_l=sum(dim[1..n,2]);
-array[1..n,1..2] of var 1..max(w,max_l): pos;
 
 % lower bound for l
 constraint w*l-sum(area)>=0;
