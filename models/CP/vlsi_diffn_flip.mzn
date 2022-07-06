@@ -1,7 +1,7 @@
 include "globals.mzn";
 include "chuffed.mzn";
 
--------------------- VARIABLES --------------------
+%-------------------- VARIABLES --------------------%
 
 int: w;                                             % width of the silicon plate
 int: n;                                             % number of circuits
@@ -18,7 +18,7 @@ constraint forall(i in 1..n)(area[i]=dim[i,1]*dim[i,2]);
 % definition of dimension after flipping
 constraint forall(i in 1..n)(if flip[i] then new_dim[i,1..2]=dim[i,1..2] else (new_dim[i,1]=dim[i,2] /\ new_dim[i,2]=dim[i,1]) endif):: domain;
 
--------------------- CONSTRAINTS --------------------
+%-------------------- CONSTRAINTS --------------------%
 
 % if a circuit is a square do not flip it
 constraint forall(i in 1..n)(if dim[i,1]=dim[i,2] then flip[i]=0 endif):: domain;
@@ -45,7 +45,7 @@ var int: i_max = arg_max(area);
 constraint 2*pos[i_max,1] <= w-new_dim[i_max,1]+2;
 constraint 2*pos[i_max,2] <= l-new_dim[i_max,2]+2;
 
--------------------- SOLVING --------------------
+%-------------------- SOLVING --------------------%
 
 % annotaion
 ann: search_ann;
