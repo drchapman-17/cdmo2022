@@ -282,16 +282,19 @@ def solveInstance(instance,options):
                 # LR 
                 if i<j:
                     s.add(Or(lr[i][j],lr[j][i],ud[i][j],ud[j][i]))
-                    
+                    wi,wj,hi,hj=widths[i],widths[j],heights[i],heights[j]                 
                     # lr(r_i,r_j)-> x_j > w_i
-
-                    s.add(Or(
-                        And(Not(f[i]),Not(f[j]),*no_overlap(i,j,False,False)),
-                        And(Not(f[i]),f[j],*no_overlap(i,j,False,True)),
-                        And(f[i],Not(f[j]),*no_overlap(i,j,True,False)),
-                        And(f[i],f[j],*no_overlap(i,j,True,True)),
-                    ))
-                    
+                    cts=[] 
+                    if wi<=W and hi<=H and wj<=W and hj<=H:  
+                        cts.append(And(Not(f[i]),Not(f[j]),*no_overlap(i,j,False,False)))
+                    if wi<=H and hi<=W and wj<=W and hj<=H:  
+                        cts.append(And(f[i],Not(f[j]),*no_overlap(i,j,True,False)))
+                    if wi<=W and hi<=H and wj<=H and hj<=W:
+                        cts.append(And(Not(f[i]),f[j],*no_overlap(i,j,False,True)))
+                    if wi<=H and hi<=W and wj<=H and hj<=W:
+                        cts.append(And(f[i],f[j],*no_overlap(i,j,True,True)))
+                    s.add(Or(cts))
+                                    
         if s.check() == sat:
             ub = H
             print('SAT: ub ->',ub)
@@ -343,7 +346,7 @@ if __name__=="__main__":
 
     instn=int(sys.argv[1])
     instance=utils.loadInstance(currentdir+f"/../instances/ins-{instn}.txt")
-    sol=solveInstance(instance)
+    sol=solveInstance(instance,{})
     W=sol[0][0]
     H=sol[0][1]
     n=len(sol[1:])

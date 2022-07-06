@@ -89,6 +89,10 @@ def display_solution(sol,**kwargs):
             cx = rx + rect.get_width()/2.0
             cy = ry + rect.get_height()/2.0
             ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
+            ratio = 1.0
+    x_left, x_right = ax.get_xlim()
+    y_low, y_high = ax.get_ylim()
+    ax.set_aspect(abs((x_right-x_left)/(y_low-y_high))*ratio)
     ax.set_xlim(0, W)
     ax.set_ylim(0, H)
     
@@ -206,9 +210,9 @@ if __name__=="__main__":
     #     ins=loadInstance(f"instances/ins-{i}.txt")
     #     ub=computeMostStupidSolution(ins)[0][1]
     #     print(f"Ins{i}: ub={ub}")
-    i=11
+    i=41
     ins=loadInstance(f"instances/ins-{i}.txt")
     sol=computeMostStupidSolution(ins)
-    display_solution(sol)
+    show(sol)
     print("H:",sol[0][1])
-    # display_solution(sol)
+    
