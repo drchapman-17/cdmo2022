@@ -170,6 +170,63 @@ def computeMostStupidSolution(instance):
     sol=[[W,H]]+[[r[0],r[1],r[2]+1,r[3]+1]for r in res]
     return sol
 
+def writeSolution(filename,sol):
+    W=sol[0][0]
+    H=sol[0][1]
+    n=len(sol[1:])
+    w=[s[0] for s in sol[1:]]
+    h=[s[1] for s in sol[1:]]
+    x=[s[2]-1 for s in sol[1:]]
+    y=[s[3]-1 for s in sol[1:]]
+    with open(filename, 'w+') as f_out:
+        f_out.write('{} {}\n'.format(W, H))
+        f_out.write('{}\n'.format(n))
+        for i in range(n):
+            f_out.write('{} {} {} {}\n'.format(w[i], h[i], x[i], y[i]))
+
+def read(filename):
+    with open(filename) as file:  # Use file to refer to the file object
+        first_line = file.readline().strip().split(" ")
+        width = int(first_line[0])
+        height = int(first_line[1])
+        n = int(file.readline().strip())
+
+        # Read all the remaining lines which contains the horizontal and vertical dimension of the i-th circuit
+        # and its bottom left corner coordinate
+        remaining_lines = file.readlines()
+
+        # To remove \n
+        remaining_lines = [line.strip() for line in remaining_lines if line.strip()]
+
+        circuits = []
+        solution = {'corners': []}
+
+        for i in range(n):
+            line = remaining_lines[i]
+            line = line.split()
+            circuits.append((int(line[0]), int(line[1])))
+            solution['corners'].append((int(line[2]), int(line[3])))
+        # Solution
+    sol = {
+        "w": width,
+        "h": height,
+        "n": n,
+        "points" : np.array(circuits,\
+                            dtype=[('w','i4'),('h','i4')])
+    }
+
+    #print(sol['points'])
+    #print([(x+1,y+1) for (x,y) in solution['corners']])
+
+    a = sol['points']
+    b = solution['corners']
+
+    l = [[sol['w'], sol['h']]]
+    for i in range(len(a)):
+        l.append([a[i][0],a[i][1],b[i][0]+1,b[i][1]+1])
+    return l 
+
+
 def write_out(filename,to_write):
     with open(filename,"w") as f:
         f.write(to_write)
