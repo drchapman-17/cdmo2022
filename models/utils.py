@@ -144,7 +144,11 @@ def computeMostStupidSolution(instance):
     n=instance['n']
     W=instance['w']
     dim=instance['dim']
-    dim=sorted(dim, key=lambda b:(b[1],b[0]) ,reverse=True)
+
+    # dim=sorted(dim, key=lambda b:(b[1],b[0]) ,reverse=True) #OLD VERSION 
+    a=sorted(enumerate(dim), key=lambda b:(b[1],b[0]) ,reverse=True)
+    dim=[i[1] for i in a]
+    idx=[i[0] for i in a]
     p=[d[0] for d in dim]
     q=[d[1] for d in dim]
     res=[]
@@ -163,6 +167,7 @@ def computeMostStupidSolution(instance):
             else: 
                 res.append([p[i],q[i],x,y])
                 appended=True
+    res=[res[i] for i in idx] #Sort back the array to the original ordering
     H=max([b[1]+b[3] for b in res])
     sol=[[W,H]]+[[r[0],r[1],r[2]+1,r[3]+1]for r in res]
     return sol
@@ -201,13 +206,9 @@ if __name__=="__main__":
     #     ins=loadInstance(f"instances/ins-{i}.txt")
     #     ub=computeMostStupidSolution(ins)[0][1]
     #     print(f"Ins{i}: ub={ub}")
-    i=1
+    i=11
     ins=loadInstance(f"instances/ins-{i}.txt")
     sol=computeMostStupidSolution(ins)
+    display_solution(sol)
     print("H:",sol[0][1])
-    out="test"
-    writeSolution(out,sol)
-    sol2=readSolution(out)
-    print(sol)
-    print(sol2)
     # display_solution(sol)
