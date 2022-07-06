@@ -218,8 +218,8 @@ def bisection(instance):
 
     #UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
 
-    UB = int(3*(LB/2))
-
+    UB = int(3*(LB/2))+1
+    LB = UB-4
     m=None
 
     print('lb', LB)
@@ -228,7 +228,7 @@ def bisection(instance):
 
     o = int((LB+UB)/2)
 
-    while LB<UB and (time()-init)<301:
+    while LB<=UB and (time()-init)<301:
         
         s = buildModel(instance, o)
         set_option(timeout=int(300-(time()-init))*1000)

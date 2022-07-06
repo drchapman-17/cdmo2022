@@ -570,3 +570,5 @@ Instance:28  Height:52  Time:2.8053152561187744
 Instance:29  Height:54  Time:3.0925958156585693
 Instance:30  Height:55  Time:4.278592109680176
 Instance:31  Height:57  Time:2.2881834506988525
+REPORT2 LRA 3*(LB/2) i!=j:
+
