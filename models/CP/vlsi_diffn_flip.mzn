@@ -20,7 +20,6 @@ constraint forall(i in 1..n)(if flip[i] then new_dim[i,1..2]=dim[i,1..2] else (n
 
 -------------------- CONSTRAINTS --------------------
 
-
 % if a circuit is a square do not flip it
 constraint forall(i in 1..n)(if dim[i,1]=dim[i,2] then flip[i]=0 endif):: domain;
 
