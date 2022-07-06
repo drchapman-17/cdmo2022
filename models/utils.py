@@ -65,6 +65,44 @@ def show(l,**kwargs):
     ax2.grid(color='k', linestyle='-', linewidth=lw)
     plt.show()
 
+def display_solution(sol,**kwargs):
+    title=""
+    figsize=None
+    for key, value in kwargs.items():
+        if key=="title": title=kwargs["title"]
+        elif key=="figsize": figsize=kwargs["figsize"]
+        else: assert False, f"Argument \"{key}\" not recognized"
+
+    W=sol[0][0]
+    H=sol[0][1]
+    n=len(sol[1:])
+    sizes_circuits=[[s[0],s[1]] for s in sol[1:]]
+    pos_circuits=[[s[2],s[3]] for s in sol[1:]]
+    fig, ax = plt.subplots()
+    cmap = plt.cm.get_cmap('Set3', n)
+    #ax = plt.gca()
+    plt.title(title)
+    
+    if len(pos_circuits) > 0:
+        for i in range(n):
+            rect = plt.Rectangle([pos_circuits[i][0]-1,pos_circuits[i][1]-1], *sizes_circuits[i], edgecolor="#333", facecolor=cmap(i))
+            ax.add_patch(rect)
+            rx, ry = rect.get_xy()
+            cx = rx + rect.get_width()/2.0
+            cy = ry + rect.get_height()/2.0
+            ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
+    ax.set_xlim(0, W)
+    ax.set_ylim(0, H)
+    
+    plt.xticks([])
+    plt.yticks([])
+    #ax.set_xticks(range(W + 1))
+    #ax.set_yticks(range(H + 1))
+    #ax.set_yticklabels([])
+    #ax.set_xticklabels([])
+
+    plt.show()
+
 
 def isFeasible(sol): 
     w=sol[0][0] 
@@ -120,7 +158,7 @@ def computeMostStupidSolution(instance):
         y=0
         while not appended:
             if overlap(x,y,p[i],q[i],res):
-                if(x>W-p[i]):
+                if(x>=W-p[i]):
                     x=0
                     y+=1
                 else:
@@ -138,7 +176,11 @@ def write_out(filename,to_write):
         f.close()
 
 if __name__=="__main__":
-    for i in range(1,41):
-        ins=loadInstance(f"instances/ins-{i}.txt")
-        ub=computeMostStupidSolution(ins)[0][1]
-        print(f"Ins{i}: ub={ub}")
+    # for i in range(1,41):
+    #     ins=loadInstance(f"instances/ins-{i}.txt")
+    #     ub=computeMostStupidSolution(ins)[0][1]
+    #     print(f"Ins{i}: ub={ub}")
+    i=11
+    ins=loadInstance(f"instances/ins-{i}.txt")
+    show(computeMostStupidSolution(ins))
+    # print(f"Ins{i}: ub={ub}")
