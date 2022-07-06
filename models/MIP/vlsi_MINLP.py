@@ -34,13 +34,12 @@ def solveInstance(instance,options):
     if(solution):
         print("Solution:",solution)
         if(show):
-            utils.show(solution)
-    if(output):
-        utils.write_out(output,str(solution))
+            utils.display_solution(solution)
+        if(output):
+            utils.writeSolution(output,solution)
 
 def usage():
     print("Usage: python {} [-v] [-t timeout] [-i infile] [-o outfile] [instn]".format(sys.argv[0].split("\\")[-1].split("/")[-1]))
-
 
 def main():
 

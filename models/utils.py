@@ -33,8 +33,6 @@ def show(l,**kwargs):
     c=0
     for i in l[1:]:
         c-=1
-        i[2]-=1
-        i[3]-=1
         img_in[pos:pos+i[0], 0:i[1]]=c
         pos+=i[0]+2
     
@@ -53,7 +51,7 @@ def show(l,**kwargs):
     
     for i in l[1:]:
         c-=1
-        img_out[i[2]:i[2]+i[0],i[3]:i[3]+i[1]]=c        
+        img_out[i[2]-1:i[2]-1+i[0],i[3]-1:i[3]-1+i[1]]=c        
 
     ax2.imshow(np.transpose(img_out), cmap='terrain')
     ax2.set_xticks(np.arange(dim_img_out[0]+1)-0.5)#,labels=[])
@@ -100,47 +98,46 @@ def display_solution(sol,**kwargs):
     #ax.set_yticks(range(H + 1))
     #ax.set_yticklabels([])
     #ax.set_xticklabels([])
-
     plt.show()
 
 
 def isFeasible(sol): 
-    w=sol[0][0] 
+    w=sol[0][0]
     h=sol[0][1]
-    rest=sol[1:]
-    n=len(rest)
+    blocks=sol[1:]
+    n=len(blocks)
     for i in range(n):
-        e1=rest[i]
-        if e1[0]<=0 or e1[1]<=0: return False 
-        #if e1[2]<0 or e1[3]<0 or e1[2]+e1[0]>w or e1[3]+e1[1]>h: return False 
+        w1,h1,x1,y1=blocks[i]
+        x1-=1
+        y1-=1
+        if w1<=0 or h1<=0: 
+            return False 
+        if x1<0 or y1<0 or x1+w1>w or y1+h1>h: 
+            return False 
         for j in range(n):
             if i!=j:
-                e2=rest[j]
-                # if e2[2]<=e1[2]<=e2[2]+e2[0]:
-                #     if e2[3]<=e1[3]<=e2[3]+e2[1]:
-                #         return False            
-                if (e1[2] < e2[2]+e2[0] and e1[2]+e1[0] > e2[2] and e1[3]+e1[1] > e1[3] and e1[3] < e2[3]+e2[1] ): 
-                    print(e1,e2)
-
+                w2,h2,x2,y2=blocks[j]
+                x2-=1
+                y2-=1
+                if (isOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2])):
+                    print(x1,x1+w1,x2,x2+w2)
                     print(f"{i} and {j} overlap")
                     return False 
-
     return True
 
-def isRectangleOverlap(R1, R2):
+def isOverlap(R1, R2):
     if (R1[0]>=R2[2]) or (R1[2]<=R2[0]) or (R1[3]<=R2[1]) or(R1[1]>=R2[3]):
         return False
     else:
         return True
 
-def overlap(x1,y1,w1,h1,res):
+def existsOverlap(x1,y1,w1,h1,res):
     for b in res:
         x2=b[2]
         y2=b[3]
         w2=b[0]
-        h2=b[1]
-
-        if isRectangleOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2]): return True
+        h2=b[1]        
+        if isOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2]): return True
     return False
 
 def computeMostStupidSolution(instance):
@@ -157,7 +154,7 @@ def computeMostStupidSolution(instance):
         x=0
         y=0
         while not appended:
-            if overlap(x,y,p[i],q[i],res):
+            if existsOverlap(x,y,p[i],q[i],res):
                 if(x>=W-p[i]):
                     x=0
                     y+=1
@@ -184,60 +181,33 @@ def writeSolution(filename,sol):
         for i in range(n):
             f_out.write('{} {} {} {}\n'.format(w[i], h[i], x[i], y[i]))
 
-def read(filename):
+def readSolution(filename):
     with open(filename) as file:  # Use file to refer to the file object
-        first_line = file.readline().strip().split(" ")
-        width = int(first_line[0])
-        height = int(first_line[1])
-        n = int(file.readline().strip())
-
+        first_line = file.readline().split()
+        w = int(first_line[0])
+        h= int(first_line[1])
+        n = int(file.readline())
         # Read all the remaining lines which contains the horizontal and vertical dimension of the i-th circuit
         # and its bottom left corner coordinate
         remaining_lines = file.readlines()
-
-        # To remove \n
-        remaining_lines = [line.strip() for line in remaining_lines if line.strip()]
-
-        circuits = []
-        solution = {'corners': []}
-
+        sol=[[w,h]]
         for i in range(n):
-            line = remaining_lines[i]
-            line = line.split()
-            circuits.append((int(line[0]), int(line[1])))
-            solution['corners'].append((int(line[2]), int(line[3])))
-        # Solution
-    sol = {
-        "w": width,
-        "h": height,
-        "n": n,
-        "points" : np.array(circuits,\
-                            dtype=[('w','i4'),('h','i4')])
-    }
-
-    #print(sol['points'])
-    #print([(x+1,y+1) for (x,y) in solution['corners']])
-
-    a = sol['points']
-    b = solution['corners']
-
-    l = [[sol['w'], sol['h']]]
-    for i in range(len(a)):
-        l.append([a[i][0],a[i][1],b[i][0]+1,b[i][1]+1])
-    return l 
-
-
-def write_out(filename,to_write):
-    with open(filename,"w") as f:
-        f.write(to_write)
-        f.close()
+            b = remaining_lines[i].split()
+            sol.append([int(b[0]),int(b[1]),int(b[2])+1,int(b[3])+1])
+    return sol 
 
 if __name__=="__main__":
     # for i in range(1,41):
     #     ins=loadInstance(f"instances/ins-{i}.txt")
     #     ub=computeMostStupidSolution(ins)[0][1]
     #     print(f"Ins{i}: ub={ub}")
-    i=11
+    i=1
     ins=loadInstance(f"instances/ins-{i}.txt")
-    show(computeMostStupidSolution(ins))
-    # print(f"Ins{i}: ub={ub}")
+    sol=computeMostStupidSolution(ins)
+    print("H:",sol[0][1])
+    out="test"
+    writeSolution(out,sol)
+    sol2=readSolution(out)
+    print(sol)
+    print(sol2)
+    # display_solution(sol)
