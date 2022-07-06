@@ -4,7 +4,7 @@ include "chuffed.mzn";
 % solver config:
 % Chuffed, free search, output solving statistics
 
--------------------- VARIABLES --------------------
+%-------------------- VARIABLES --------------------%
 
 int: w;                                             % width of the silicon plate
 int: n;                                             % number of circuits
@@ -16,7 +16,7 @@ array[1..n] of var int: area;                       % area of the circuits
 % definition of area
 constraint forall(i in 1..n)(area[i]=dim[i,1]*dim[i,2]);
 
--------------------- CONSTRAINTS --------------------
+%-------------------- CONSTRAINTS --------------------%
 
 % upper bound for l
 int: max_l=sum(dim[1..n,2]);
@@ -40,7 +40,7 @@ var int: i_max = arg_max(area);
 constraint 2*pos[i_max,1] <= w-dim[i_max,1]+2;
 constraint 2*pos[i_max,2] <= l-dim[i_max,2]+2;
 
--------------------- SOLVING --------------------
+%-------------------- SOLVING --------------------%
 
 % annotaion
 ann: search_ann;
