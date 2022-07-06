@@ -1,6 +1,7 @@
+from math import log2
 from socket import timeout
 from z3 import *
-from cvc5 import pythonic
+
 from time import time
 import numpy as np
 import os,sys 
@@ -134,7 +135,8 @@ def buildModel(instance, o):
     # Block Position Vectors
     X = IntVector('x', n)
     Y = IntVector('y', n)
-    
+    #X = [ BitVec('x__{}'.format(i), int(log2(H))) for i in range(n)]
+    #Y = [ BitVec('y__{}'.format(i), int(log2(H))) for i in range(n)]
 
     # Block widths and heights
     widths = [d[0] for d in dim]
@@ -145,9 +147,10 @@ def buildModel(instance, o):
     
     #Solver Declaration
 
-    #s =  SolverFor("LIA")
+    #s =  SolverFor('ALL')
     s = Tactic('lra').solver()
-    #s = pythonic.SolverFor("LRA")
+    #s = SimpleSolver()
+    #s.set("smt.ematching", False)
     #Height is >= 0
     #s.add(d>0)
 
@@ -217,9 +220,11 @@ def bisection(instance):
     LB = int(sum([p[0]*p[1] for p in instance['dim']])/instance['w'])
 
     #UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
-
-    UB = int(3*(LB/2))+1
-    LB = UB-4
+    naiive = utils.computeMostStupidSolution(instance)
+    #print(heuristic)
+    #UB = int(3*(LB/2))
+    UB = naiive[0][1]+1
+    print(naiive)
     m=None
 
     print('lb', LB)
@@ -228,15 +233,16 @@ def bisection(instance):
 
     o = int((LB+UB)/2)
 
-    while LB<=UB and (time()-init)<301:
+    while LB<UB and (time()-init)<301:
         
         s = buildModel(instance, o)
         set_option(timeout=int(300-(time()-init))*1000)
         if(s.check() == sat):
             #m = s.model()
             UB = o
-            if(LB==UB):
-                m = s.model()
+            m = s.model()
+            
+
             print("sat, UB:", UB)
         else:
             LB = o +1
@@ -245,30 +251,37 @@ def bisection(instance):
         o = int((LB+UB)/2)
         #print("O:",o)
 
-    print(time()-init)
+
+    #print(time()-init)
     #m = None
     #if s.check()==sat:
-    #    m = s.model()
+    # if time()-init<301:
+    #     m = format_solution(m, o, instance['dim'], instance['n'], instance['w'])
+    # else:
+    #     m = naiive
+
     return o, m, time()-init
 
 if __name__=="__main__":
-    filename=currentdir+"/report2"
-    with open(filename, 'a') as outfile:
-        outfile.write("REPORT2 LRA 3*(LB/2) i!=j:\n\n")
-    for i in range(1,41):
+    set_option(precision=0)
+    filename=currentdir+"/report-bv"
+    with open(filename, 'w') as outfile:
+        outfile.write("REPORT2 LRA 3*(LB/2) i!=j UB+1:\n\n")
+    for i in range(34,41):
         print("SOLVING: ", i)
         instance = utils.loadInstance(currentdir+f"/../instances/ins-{i}.txt")
 
         print(instance)
         o, m, t = bisection(instance)
 
-        print(format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+        m = format_solution(m, o, instance['dim'], instance['n'], instance['w'])
+        print(m)
 
         if(t<300):
             with open(filename, 'a') as outfile:
-                outfile.write("Instance:{}  Height:{}  Time:{}\n".format(i,o,t))
+                outfile.write("Instance:{}  Height:{}  Time:{}  SOL:{}\n".format(i,o,t,m))
         else:
             with open(filename, 'a') as outfile:
-                outfile.write("Instance:{}  Height:NO  Time:{}\n".format(i,t))
+                outfile.write("Instance:{}  Height:NO  Time:{}  NaiiveSOL:\n".format(i,t,m))
         print("Finished in:", t)    
 

@@ -77,11 +77,9 @@ def solveInstance(instance, options):
     Xij = [Int('x{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
     Yij = [Int('y{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
 
-    x_bool0 = [x>=0 for x in Xij]
-    y_bool0 = [y>=0 for y in Yij]
-    x_bool1 = [x<=1 for x in Xij]
-    y_bool1 = [y<=1 for y in Yij]
-    model.add([*x_bool0,*y_bool0,*x_bool1,*y_bool1])
+    x_bool = [And(x>=0, x<=1) for x in Xij]
+    y_bool = [And(y>=0, y<=1) for y in Yij]
+    model.add([*x_bool,*y_bool])
     
     # No overlapping constraints
     no = nof(X, Y, Xij, Yij, widths, heights, W, Hmax, n)
