@@ -200,13 +200,11 @@ def main():
                 outfile.write("{};{};{}\n".format(i,t,m))
         else:
             with open(filename, 'a') as outfile:
-                outfile.write("{};{};{}\n".format(i,t,m))
+                outfile.write("{};{};{}\n".format(i,None,m))
         print("Finished in:", t)
 
 if __name__=="__main__":
 
     main()
-    # set_option("parallel.enable","true")
-    # set_option("parallel.threads.max","4")
-    
+
 

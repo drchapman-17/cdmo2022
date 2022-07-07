@@ -1,7 +1,6 @@
 from math import log2
 from socket import timeout
 from z3 import *
-
 from time import time
 import numpy as np
 import os,sys 
@@ -15,7 +14,6 @@ import utils
 
 def format_solution(m, o, dim, n, W):
 
-    print(m)
     schema = []
 
     if m != None:
@@ -36,42 +34,6 @@ def format_solution(m, o, dim, n, W):
             schema.append([*dim[i], *blockpos[i]])
 
     return schema
-
-def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
-
-    x_width = [ Xs[i] + Ws[i] <= W for i in range(n)]
-    y_height = [ Ys[i] + Hs[i] <= d for i in range(n)]
-    x_morethan_0 = [ Xs[i] >= 0 for i in range(n)]
-    y_morethan_0 = [ Ys[i] >= 0 for i in range(n)]
-
-    return [*x_width, *y_height, *x_morethan_0, *y_morethan_0]
-
-
-def no_overlap2(Xs, Ys, Ws, Hs, W, H, n):
-    no = [ Or(
-                And(
-                    Xs[i] + Ws[i] <= Xs[j], 
-                    Xs[i] - Ws[j] >= Xs[j] - W, 
-                    Ys[i] + Hs[i] <= Ys[j] + H, 
-                    Ys[i] - Hs[j] >= Ys[j] - 2*H),
-                And(
-                    Xs[i] + Ws[i] <= Xs[j] + W, 
-                    Xs[i] - Ws[j] >= Xs[j] - 2*W, 
-                    Ys[i] + Hs[i] <= Ys[j], 
-                    Ys[i] - Hs[j] >= Ys[j] - H),
-                And(
-                    Xs[i] + Ws[i] <= Xs[j] + W, 
-                    Xs[i] - Ws[j] >= Xs[j], 
-                    Ys[i] + Hs[i] <= Ys[j] + 2*H, 
-                    Ys[i] - Hs[j] >= Ys[j] - H),
-                And(
-                    Xs[i] + Ws[i] <= Xs[j] + 2*W, 
-                    Xs[i] - Ws[j] >= Xs[j] - W, 
-                    Ys[i] + Hs[i] <= Ys[j] + H, 
-                    Ys[i] - Hs[j] >= Ys[j])
-                ) for i in range(n) for j in range(n) if i!=j ]
-
-    return no
 
 
 def no_overlap(i, j, Xs, Ys, Ws, Hs, W, H, d, fi, fj):
@@ -113,9 +75,6 @@ def boundary(i, Xs, Ys, Ws, Hs, W, d, fi):
 
 def buildModel(instance, o):
 
-    verbose=False
-    timeout=None
-    
     n = instance['n']
     w = instance['w']
     dim = instance['dim']
@@ -132,8 +91,6 @@ def buildModel(instance, o):
     # Block Position Vectors
     X = IntVector('x', n)
     Y = IntVector('y', n)
-    #X = [ BitVec('x__{}'.format(i), int(log2(H))) for i in range(n)]
-    #Y = [ BitVec('y__{}'.format(i), int(log2(H))) for i in range(n)]
 
     # Block widths and heights
     widths = [d[0] for d in dim]
@@ -146,11 +103,6 @@ def buildModel(instance, o):
     f = BoolVector('f',n)
     #s =  SolverFor('ALL')
     s = Tactic('lra').solver()
-    #s = SimpleSolver()
-    #s.set("smt.ematching", False)
-    #Height is >= 0
-    #s.add(d>0)
-
 
     for i in range(n):
         for j in range(n):
@@ -167,49 +119,32 @@ def buildModel(instance, o):
                 And(f[i], 
                     boundary(i, X, Y, widths, heights, W, d, True))))
 
-    #Boundary
-    # Max X Domain
-    #s.add([And(0 <= X[i], X[i] <= W-widths[i]) 
-    #        if i!=largest_block else And(0 <= X[i], X[i] <= int(W-widths[i])/2) 
-    #        for i in range(n)])
-    # Max Y Domain
-    # s.add([And(0 <= Y[i], Y[i] <= d-heights[i]) 
-            # if i!=largest_block else And(0 <= Y[i], Y[i] <= int(d-heights[i])/2) 
-            # for i in range(n)])
-    
-    rotationsAllowed=False
-    ## IF NO ROTATION
-    # Boundary constraints for each block
-    # IF ROTATION
-
-
-
     return s
     
-def bisection(instance):
+def bisection(instance, verbose=False):
 
     init = time()
 
-    #Lower Bound
     LB = int(sum([p[0]*p[1] for p in instance['dim']])/instance['w'])
 
-    # Naiive Solution Heuristic to compute an Wpper Bound
+    #UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
     naiive = utils.computeMostStupidSolution(instance)
+    #print(heuristic)
+    #UB = int(3*(LB/2))
     UB = naiive[0][1]+1
+    #print(naiive)
 
-    print(naiive)
-
-    #Model
     m=None
-
-    print('lb', LB)
-
-    print('ub', UB)
-
-    #Objective Computation
     o = int((LB+UB)/2)
 
-    #Bisection
+
+    if verbose:
+        print("BISECTION STARTING VALUES:")
+        print('lb', LB)
+        print('ub', UB)
+        print("o", o)
+        print("-----------------------")
+    
     while LB<UB and (time()-init)<301:
         
         s = buildModel(instance, o)
@@ -219,22 +154,48 @@ def bisection(instance):
             UB = o
             m = s.model()
             
-
-            print("sat, UB:", UB)
+            if verbose:
+                print("sat, UB:", UB)
         else:
             LB = o +1
-            print("unsat, LB:", LB)
+            if verbose:
+                print("unsat, LB:", LB)
         
         o = int((LB+UB)/2)
+        
+        if verbose:
+            print("o:", o)
+            print("-----------------------")
 
     return o, m, time()-init
 
-if __name__=="__main__":
-    
 
-    #Report
+def solveInstance(instance, options):
+    #Risolve l'istanza
+
+    if options['verbose']:
+        o, m, t = bisection(instance, options['verbose'])
+        print("Solved Instance:")
+        print("Minimum Height Found: ", o)
+        print("Instance Model:", format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+        print("Solved in: {}s".format(t))
+        print("-----------------------")
+    else:
+        o, m, t = bisection(instance)
+        print("Instance Model:", format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+        print("-----------------------")
+    #Stampa su file (zenyap)
+    if options['output']:
+        utils.writeSolution(options['output'],format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+    #Fa Show
+    if options['show']:
+        utils.display_solution(format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+
+        
+def main():
+    # report
     filename=currentdir+"/report_rotation.csv"
-    with open(filename, 'a') as outfile:
+    with open(filename, 'w') as outfile:
         outfile.write("Instance;Time;Solution\n")
     for i in range(1,41):
         print("SOLVING: ", i)
@@ -244,13 +205,16 @@ if __name__=="__main__":
         o, m, t = bisection(instance)
 
         m = format_solution(m, o, instance['dim'], instance['n'], instance['w'])
-        print(m)
 
         if(t<300):
             with open(filename, 'a') as outfile:
                 outfile.write("{};{};{}\n".format(i,t,m))
         else:
             with open(filename, 'a') as outfile:
-                outfile.write("{};{};{}\n".format(i,t,[]))
-        print("Finished in:", t)    
+                outfile.write("{};{};{}\n".format(i,None,m))
+        print("Finished in:", t)
+
+if __name__=="__main__":
+
+    main()
 
