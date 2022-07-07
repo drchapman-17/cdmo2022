@@ -201,13 +201,14 @@ if __name__=="__main__":
     #     ins=loadInstance(f"instances/ins-{i}.txt")
     #     ub=computeMostStupidSolution(ins)[0][1]
     #     print(f"Ins{i}: ub={ub}")
-    i=1
-    ins=loadInstance(f"instances/ins-{i}.txt")
-    sol=computeMostStupidSolution(ins)
-    print("H:",sol[0][1])
-    out="test"
-    writeSolution(out,sol)
-    sol2=readSolution(out)
-    print(sol)
-    print(sol2)
+    # i=1
+    # ins=loadInstance(f"instances/ins-{i}.txt")
+    # sol=computeMostStupidSolution(ins)
+    # print("H:",sol[0][1])
+    # out="test"
+    # writeSolution(out,sol)
+    sol=readSolution(f"./SAT/outputs_rot/out-36.txt")
+    # print(sol)
+    # print(sol2)
     # display_solution(sol)
+    print(isFeasible(sol))

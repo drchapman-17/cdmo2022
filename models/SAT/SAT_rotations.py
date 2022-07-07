@@ -21,26 +21,21 @@ def getNewDims(model,widths,heights,f):
             h.append(heights[i])
     return w,h 
 
-def getCoords(m, x, y, W, H, n,flip):
+def getCoords(m, x, y, W, H, n):
     x_sol = []
     y_sol = [] 
     
     for i in range(n):
         j = 0
-        f=m.evaluate(flip[i])
         while j < W:
-            #print(x[i][j],m.evaluate(x[i][j]),"\n0\n")
             if m.evaluate(x[i][j]):
-                #print(x[i][j], m.evaluate(x[i][j]))
                 x_sol.append(j)
                 break
             j += 1
 
         j = 0
         while j < H:
-            #print(y[i][j],m.evaluate(y[i][j]),"\n1\n")
             if m.evaluate(y[i][j]):
-                #print(y[i][j], m.evaluate(y[i][j]))
                 y_sol.append(j)
                 break
             j += 1
@@ -100,7 +95,7 @@ def read(filename):
         l.append([a[i][0],a[i][1],b[i][0]+1,b[i][1]+1])
     return l 
 
-def solveInstance(instance,options):
+def solveInstance(instance):
     n = instance['n']
     W = instance['w']
     widths  = [i[0] for i in instance['dim']]
@@ -163,6 +158,11 @@ def solveInstance(instance,options):
             dim1i,dim2i=(widths[i],heights[i]) if not fi else (heights[i],widths[i])
             dim1j,dim2j=(widths[j],heights[j]) if not fj else (heights[j],widths[j])
             cts=[]
+
+            if dim1i == 26:
+                print(W, dim1i)
+                print(len(px))
+                print(len(py))
 
             # lr(r_i,r_j)-> x_j > w_i
             cts.append(Or(
@@ -317,7 +317,7 @@ def solveInstance(instance,options):
     e_time = time.time() - s_time
     print("Time:", e_time)
     model=s.model()
-    cx,cy=getCoords(model, px, py, W, H, n,f)
+    cx,cy=getCoords(model, px, py, W, H, n)
     new_w,new_h=getNewDims(model,widths,heights,f)
 
     sol=[[W,H]]+[[new_w[i],new_h[i],cx[i]+1,cy[i]+1] for i in range(n)]
@@ -353,8 +353,9 @@ if __name__=="__main__":
     cy=[s[3]-1 for s in sol[1:]]
     # WRITE OUT
     write_file(W, H, n, widths,
-                    heights, cx, cy, currentdir+'./outputs_opt/out-' + str(instn) + '.txt')
+                    heights, cx, cy, currentdir+'./outputs_rot/out-' + str(instn) + '.txt')
     # DISPLAY
-    utils.display_solution(sol,title=f'Plate {instn}')
+    #utils.display_solution(sol,title=f'Plate {instn}')
+    print(sol)
 
 
