@@ -55,4 +55,4 @@ search_ann = priority_search(area,  [int_search([pos[i,2],pos[i,1]], input_order
 solve :: search_ann minimize l;
 
 % outputting
-output["[[\(w), \(l)],\n"]++["[\(dim[i,1]), \(dim[i,2]), \(pos[i,1]), \(pos[i,2])],\n" | i in 1..n-1]++["[\(dim[n,1]), \(dim[n,2]), \(pos[n,1]), \(pos[n,2])]]"]
+output["[[\(w), \(l)],\n"]++["[\(new_dim[i,1]), \(new_dim[i,2]), \(pos[i,1]), \(pos[i,2])],\n" | i in 1..n-1]++["[\(new_dim[n,1]), \(new_dim[n,2]), \(pos[n,1]), \(pos[n,2])]]"]

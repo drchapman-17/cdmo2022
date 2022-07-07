@@ -8,6 +8,7 @@ sys.path.insert(0, parentdir)
 sys.path.insert(0, currentdir)
 import utils
 import time
+import math
 
 def getNewDims(model,widths,heights,f):
     w=[]
@@ -112,7 +113,7 @@ def solveInstance(instance,options):
 
     stupidSol=utils.computeMostStupidSolution(instance)
 
-    lb = int(tot_area/W)
+    lb = int(math.ceil(tot_area/W))
     #     ub = int(2*max( 
     #                 max([ [p[0],p[1]] for p in instance['dim']],key=lambda p:p[0]*p[1]) [1] #Height of the block with the largest area
     #                 ,lb))+1 
@@ -298,6 +299,7 @@ def solveInstance(instance,options):
         if s.check() == sat:
             ub = H
             print('SAT: ub ->',ub)
+            model=s.model()
         else:
             lb = H + 1
             print("UNSAT: lb ->",lb)
@@ -319,11 +321,6 @@ def solveInstance(instance,options):
 
     e_time = time.time() - s_time
     print("Time:", e_time)
-    model=s.model()
-    cx,cy=getCoords(model, px, py, W, H, n,f)
-    new_w,new_h=getNewDims(model,widths,heights,f)
-
-    sol=[[W,H]]+[[new_w[i],new_h[i],cx[i]+1,cy[i]+1] for i in range(n)]
     
     """
     # FOR DEBUGGING PURPOSES ONLY
@@ -355,8 +352,8 @@ if __name__=="__main__":
     cx=[s[2]-1 for s in sol[1:]]
     cy=[s[3]-1 for s in sol[1:]]
     # WRITE OUT
-    write_file(W, H, n, widths,
-                    heights, cx, cy, currentdir+'./outputs_opt/out-' + str(instn) + '.txt')
+    #write_file(W, H, n, widths,
+    #                heights, cx, cy, currentdir+'./outputs_opt/out-' + str(instn) + '.txt')
     # DISPLAY
     utils.display_solution(sol,title=f'Plate {instn}')
 
