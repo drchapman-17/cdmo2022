@@ -112,6 +112,8 @@ def solveInstance(instance,options):
     tot_area=sum([w*h for w,h in zip(widths,heights)])
 
     stupidSol=utils.computeMostStupidSolution(instance)
+    if not stupidSol:
+        return None
 
     lb = int(math.ceil(tot_area/W))
     #     ub = int(2*max( 
@@ -321,7 +323,10 @@ def solveInstance(instance,options):
 
     e_time = time.time() - s_time
     print("Time:", e_time)
-    
+    cx,cy=getCoords(model, px, py, W, H, n,f)
+    new_w,new_h=getNewDims(model,widths,heights,f)
+    sol=[[W,H]]+[[new_w[i],new_h[i],cx[i]+1,cy[i]+1] for i in range(n)]
+
     """
     # FOR DEBUGGING PURPOSES ONLY
     print(*["f_{}:{}\n".format(i+1,model.evaluate(f[i])) for i in range(n)])
@@ -344,17 +349,19 @@ if __name__=="__main__":
     instn=int(sys.argv[1])
     instance=utils.loadInstance(currentdir+f"/../instances/ins-{instn}.txt")
     sol=solveInstance(instance,{})
-    W=sol[0][0]
-    H=sol[0][1]
-    n=len(sol[1:])
-    widths=[s[0] for s in sol[1:]]
-    heights=[s[1] for s in sol[1:]]
-    cx=[s[2]-1 for s in sol[1:]]
-    cy=[s[3]-1 for s in sol[1:]]
-    # WRITE OUT
-    #write_file(W, H, n, widths,
-    #                heights, cx, cy, currentdir+'./outputs_opt/out-' + str(instn) + '.txt')
-    # DISPLAY
-    utils.display_solution(sol,title=f'Plate {instn}')
-
+    if sol:
+        W=sol[0][0]
+        H=sol[0][1]
+        n=len(sol[1:])
+        widths=[s[0] for s in sol[1:]]
+        heights=[s[1] for s in sol[1:]]
+        cx=[s[2]-1 for s in sol[1:]]
+        cy=[s[3]-1 for s in sol[1:]]
+        # WRITE OUT
+        #write_file(W, H, n, widths,
+        #                heights, cx, cy, currentdir+'./outputs_opt/out-' + str(instn) + '.txt')
+        # DISPLAY
+        utils.display_solution(sol,title=f'Plate {instn}')
+    else:
+        print("No solution!")
 
