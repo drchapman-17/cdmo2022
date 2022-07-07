@@ -1,45 +1,59 @@
 import time
 import utils
-import utils_sat
-
+from utils_sat import *
+from z3 import *
 
 class VLSI_Problem():
-    
+    __statusMessages__={
+        -2:"Unitialized",
+        -1:"Unfeasible",
+        0:"Initialized",
+        1:"Solved",
+        2:"Time-out"
+    }
+    status=-2
+
     def __init__(self,instance):
         self.instance=instance 
+        self.status=0
+        self.model=None
+
+    def solve(self,timeLimit=None,verbose=False):
         
         ''' VARIABLES '''
-        n = instance['n']
-        W = instance['w']
+        n = self.instance['n']
+        W = self.instance['w']
             
-        widths  = [i[0] for i in instance['dim']]
-        heights = [i[1] for i in instance['dim']]
-
+        widths  = [i[0] for i in self.instance['dim']]
+        heights = [i[1] for i in self.instance['dim']]
         largest_idx = [w*h for w,h in zip(widths,heights)].index(max([w*h for w,h in\
-                                                                            zip(widths,heights)]))   
-        
+                                                                            zip(widths,heights)]))       
         tot_area=sum([w*h for w,h in zip(widths,heights)])
 
-        lb = int(tot_area/W)
-        naiveSolution = utils.computeMostStupidSolution(instance)
+        naiveSolution = utils.computeMostStupidSolution(self.instance)
+        if not naiveSolution:
+            return None
+     
         ub = naiveSolution[0][1]+1
-        
-        H = lb
-        
-        s_time = time.time()
-        
+        lb = int(tot_area/W)   
+        H = int((ub+lb)/2)
+    
+        timeout=timeLimit*1000
         ''' SOLVER WITH 5 MINUTES TIMEOUT'''
         self.s = Solver()
-        self.s.set("timeout", 300000)
+        
 
-        while (lb < ub):
-            if (time.time() > s_time + 300):
-                self.model = None
-                self.px = None
-                self.py = None
-                self.H = None
-                self.e_time = 0.0
+        s_time = time.time()+timeLimit
+        while (lb < ub and s_time-time.time()>0):
             
+            # if (time.time() > s_time + 300):
+            #      = None
+            #     self.px = None
+            #     self.py = None
+            #     self.H = None
+            #     self.e_time = 0.0
+            
+            self.s.set("timeout", timeout)
             '''
             ==================================================================
             Let x_i and y_i be integer variables such that the pair (x_i, y_i)
@@ -117,29 +131,29 @@ class VLSI_Problem():
                     ==================================================================
                     '''
                     # LR 
-                    if utils_sat.large_rectangles(widths[i],widths[j],heights[i],heights[j], W, H) == "":
-                        if i<j and not utils_sat.same_rectangles(widths[i],widths[j],heights[i],heights[j]):
-                            if not utils_sat.largest_rectangle(j, largest_idx):
+                    if large_rectangles(widths[i],widths[j],heights[i],heights[j], W, H) == "":
+                        if i<j and not same_rectangles(widths[i],widths[j],heights[i],heights[j]):
+                            if not largest_rectangle(j, largest_idx):
                                 self.s.add(Or(self.lr[i][j],self.lr[j][i],self.ud[i][j],self.ud[j][i]))
 
                                 self.s.add(
-                                    *utils_sat.no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,self.ud),
-                                    *utils_sat.no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,self.lr,self.ud)
+                                    *no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,self.ud),
+                                    *no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,self.lr,self.ud)
                                 )
                             else:
                                 self.s.add(Or(self.lr[j][i],self.ud[i][j],self.ud[j][i]))
 
                                 self.s.add(
-                                    *utils_sat.no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,False,self.ud),
-                                    *utils_sat.no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,self.lr,self.ud)
+                                    *no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,False,self.ud),
+                                    *no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,self.lr,self.ud)
                                 )
                                 
-                        elif i<j and utils_sat.same_rectangles(widths[i],widths[j],heights[i],heights[j]):
+                        elif i<j and same_rectangles(widths[i],widths[j],heights[i],heights[j]):
                             self.s.add(Or(self.lr[i][j],self.ud[i][j],self.ud[j][i]))
 
                             self.s.add(
-                                *utils_sat.no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,self.ud),
-                                *utils_sat.no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,False,self.ud)
+                                *no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,self.ud),
+                                *no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,False,self.ud)
                             )
                                 
                             self.s.add(Or(
@@ -147,29 +161,29 @@ class VLSI_Problem():
                                     self.lr[j][i]
                             ))
                             
-                    elif utils_sat.large_rectangles(widths[i],widths[j],heights[i],heights[j], W, H) == "W":
+                    elif large_rectangles(widths[i],widths[j],heights[i],heights[j], W, H) == "W":
                         if i<j:
                             self.s.add(Or(self.ud[i][j],self.ud[j][i]))
 
                             self.s.add(
-                                *utils_sat.no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,False,self.ud),
-                                *utils_sat.no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,False,self.ud)
+                                *no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,False,self.ud),
+                                *no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,False,self.ud)
                             )
                             
-                    elif utils_sat.large_rectangles(widths[i],widths[j],heights[i],heights[j], W, H) == "H":
-                        if i<j and not utils_sat.same_rectangles(widths[i],widths[j],heights[i],heights[j]):
+                    elif large_rectangles(widths[i],widths[j],heights[i],heights[j], W, H) == "H":
+                        if i<j and not same_rectangles(widths[i],widths[j],heights[i],heights[j]):
                             self.s.add(Or(self.lr[i][j],self.lr[j][i]))
                             
                             self.s.add(
-                                *utils_sat.no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,False),
-                                *utils_sat.no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,self.lr,False)
+                                *no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,False),
+                                *no_overlap(W,H,widths,heights,j,i,False,False,self.px,self.py,self.lr,False)
                             )
                             
-                        elif i<j and utils_sat.same_rectangles(widths[i],widths[j],heights[i],heights[j]):
+                        elif i<j and same_rectangles(widths[i],widths[j],heights[i],heights[j]):
                             self.s.add(self.lr[i][j])
                             
                             self.s.add(
-                                *utils_sat.no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,False)
+                                *no_overlap(W,H,widths,heights,i,j,False,False,self.px,self.py,self.lr,False)
                             )
                             
                             self.s.add(Or(
@@ -200,23 +214,12 @@ class VLSI_Problem():
         self.e_time = time.time() - s_time
 
 
-    def solve(self,timeLimit=None,verbose=False):
-        self.problem.solve(pulp.PULP_CBC_CMD(timeLimit=timeLimit, msg=1 if verbose else 0, gapRel=0))
-
     def getStatusMessage(self):
-        return LpStatus[self.problem.status]+ ("(or maybe time-out idk lol)" if self.problem.status==1 else "")
+        return self.__statusMessages__[self.status]
     
     def getStatusCode(self):
-        return self.problem.status
+        return self.status
 
     def getSolution(self):
-        if self.problem.status<0:
-            return None
-        vn=[var.name for var in self.problem.variables()]
-        vv=[var.varValue for var in self.problem.variables()]
-        solution=[[self.instance["w"],int(vv[vn.index("H_c")])]]
-        for i in range(self.instance["n"]):
-            solution.append([int(vv[vn.index(f"W_{i}")]) ,int(vv[vn.index(f"H_{i}")]) \
-                ,int(vv[vn.index(f"Xl_{i}")])+1 ,int(vv[vn.index(f"Yb_{i}")])+1])
-        return solution
-        
+        if self.status>0:
+            return self.solution() 

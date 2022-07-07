@@ -2,7 +2,7 @@ from pulp import *
 
 class VLSI_Problem():
     
-    def __init__(self,instance,rotationsAllowed):
+    def __init__(self,instance,rotationsAllowed=False):
         self.instance=instance 
         #PARAMETERS
         M=1000
