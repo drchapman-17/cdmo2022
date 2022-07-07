@@ -1,213 +1,188 @@
-import os,sys,inspect,getopt
-from pathlib import Path
 from z3 import *
+from time import time
+import numpy as np
+import os,sys 
+import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, currentdir) 
 import utils
 
-def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
+def format_solution(m, o, dim, n, W):
 
-    x_width = [ Xs[i] + Ws[i] <= W for i in range(n)]
-    y_height = [ Ys[i] + Hs[i] <= d for i in range(n)]
-    x_morethan_0 = [ Xs[i] >= 0 for i in range(n)]
-    y_morethan_0 = [ Ys[i] >= 0 for i in range(n)]
+    schema = []
+    if m != None:
+        nicer = sorted ([(d, m[d]) for d in m], key = lambda x: str(x[0]))
+        dict = {str(l[0]):l[1] for l in nicer if str(l[0]).startswith("x__") or str(l[0]).startswith("y__")}
 
-    return [*x_width, *y_height, *x_morethan_0, *y_morethan_0]
+        blockpos = []
+        for i in range(n):
+            blockpos.append([int(str(dict['x__{}'.format(i)]))+1,int(str(dict['y__{}'.format(i)]))+1])
 
-def no_overlap(Xs, Ys, Xij, Yij, Ws, Hs, W, H, n):
-    no_1 = [ Xs[i] + Ws[i] <= Xs[j] + W*(Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
-    no_2 = [ Xs[i] - Ws[j] >= Xs[j] - W*(1 - Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
-    no_3 = [ Ys[i] + Hs[i] <= Ys[j] + H*(1 + Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
-    no_4 = [ Ys[i] - Hs[j] >= Ys[j] - H*(2 - Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i!=j ]
-    return [*no_1,*no_2,*no_3,*no_4]
+        schema = [[W,o]]
 
-def boundary_constraints_rotation(Xs, Ys, Ws, Hs, W, d, n):
-    pass
+        for i in range(n):
+            schema.append([*dim[i], *blockpos[i]])
 
-def no_overlap_rotation(Xs, Ys, Ws, Hs, W, d, n): #NON SERVE? BOH
-    pass
+    return schema
+
+
+def no_overlap(Xs, Ys, Ws, Hs, W, H, n):
+    no = [ Or(
+                And(
+                    Xs[i] + Ws[i] <= Xs[j], 
+                    Xs[i] - Ws[j] >= Xs[j] - W, 
+                    Ys[i] + Hs[i] <= Ys[j] + H, 
+                    Ys[i] - Hs[j] >= Ys[j] - 2*H),
+                And(
+                    Xs[i] + Ws[i] <= Xs[j] + W, 
+                    Xs[i] - Ws[j] >= Xs[j] - 2*W, 
+                    Ys[i] + Hs[i] <= Ys[j], 
+                    Ys[i] - Hs[j] >= Ys[j] - H),
+                And(
+                    Xs[i] + Ws[i] <= Xs[j] + W, 
+                    Xs[i] - Ws[j] >= Xs[j], 
+                    Ys[i] + Hs[i] <= Ys[j] + 2*H, 
+                    Ys[i] - Hs[j] >= Ys[j] - H),
+                And(
+                    Xs[i] + Ws[i] <= Xs[j] + 2*W, 
+                    Xs[i] - Ws[j] >= Xs[j] - W, 
+                    Ys[i] + Hs[i] <= Ys[j] + H, 
+                    Ys[i] - Hs[j] >= Ys[j])
+                ) for i in range(n) for j in range(n) if i!=j ]
+
+    return no
+
+
+def buildModel(instance, o):
+    n = instance['n']
+    w = instance['w']
+    dim = instance['dim']
+
+    #Largest block symmetry break
+    largest_block = np.argmax([d[0]*d[1] for d in dim ])
+
+    # Height: sum of all blocks heights
+    H = sum([int(dim[i][1]) for i in range(n)])
+
+    # Width: silicon plate width
+    W = w
+
+    # Block Position Vectors
+    X = IntVector('x', n)
+    Y = IntVector('y', n)
+
+
+    # Block widths and heights
+    widths = [d[0] for d in dim]
+    heights = [d[1] for d in dim]
+
+    # Height variable
+    d = o
+    
+    #Solver Declaration
+    s = Tactic('lra').solver()
+
+    #Boundary
+    # Max X Domain
+    s.add([And(0 <= X[i], X[i] <= W-widths[i]) 
+            if i!=largest_block else And(0 <= X[i], X[i] <= int(W-widths[i])/2) 
+            for i in range(n)])
+    # Max Y Domain
+    s.add([And(0 <= Y[i], Y[i] <= d-heights[i]) 
+            if i!=largest_block else And(0 <= Y[i], Y[i] <= int(d-heights[i])/2) 
+            for i in range(n)])
+
+    no = no_overlap(X, Y, widths, heights, W, H, n)
+    s.add(no)
+    return s
+    
+def bisection(instance, timeout=None,verbose=False):
+    init = time()
+
+    naiive = utils.computeMostStupidSolution(instance)
+    if not naiive:
+        return None,None,None
+
+    LB = int(sum([p[0]*p[1] for p in instance['dim']])/instance['w'])
+    UB = naiive[0][1]+1
+
+    m=None
+    o = int((LB+UB)/2)
+    best_o=o=UB
+
+    if verbose:
+        print("BISECTION STARTING VALUES:")
+        print('lb', LB)
+        print('ub', UB)
+        print("o", o)
+        print("-----------------------")
+    
+    while LB<UB:
+        s = buildModel(instance, o)
+        if timeout and (time()-init>timeout+1):
+            break
+        if timeout: set_option(timeout=int(timeout+init-time())*1000)
+        if(s.check() == sat):
+            best_o=o
+            UB = o
+            m = s.model()        
+            if verbose:
+                print("sat, UB:", UB)
+        else:
+            LB = o +1
+            if verbose:
+                print("unsat, LB:", LB)
+        o = int((LB+UB)/2)
+        if verbose:
+            print("o:", o)
+            print("-----------------------")
+
+    return best_o, m, time()-init
 
 
 def solveInstance(instance, options):
-
-    verbose=False
-    timeout=None
-
-    if options["verbose"]:
-         verbose=True
-    if options["timeout"]:
-        timeout=options["timeout"] # passare a script di amadini
-    show=options["show"]
-    output=options["output"]          
-    export=options["export"]
-    rotationsAllowed=options["rotationsAllowed"]
-
-    n = instance['n']
-    W = instance['w']
-    dim = instance['dim']
-    widths = [d[0] for d in dim]
-    heights = [d[1] for d in dim]
-    Hmax = sum(heights)
-
-    # DECISION VARIABLES
-    X = IntVector('x', n) # X positions vector
-    Y = IntVector('y', n) # Y positions vector
-
-    d = Int('d')    # height of the chip
-    
-
-    # BUILD SOLVER 
-    model = Solver() if False else Optimize() #FIXME POI SI CAMBIA SE VOGLIAMO PROVARE ALTRI SOLVER BOH 
-
-    # CONSTRAINTS   
-    model.add(d>0)          # Height >= 0
-
-    # Boundary constraints
-    if rotationsAllowed:
-        bcf=boundary_constraints_rotation
-        nof=no_overlap_rotation
-    else:
-        bcf=boundary_constraints
-        nof=no_overlap
-
-    bc = bcf(X, Y, widths, heights, d, W, n)
-    model.add(bc)
-    Xij = [Int('x{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
-    Yij = [Int('y{}_{}'.format(i,j)) for i in range(n) for j in range(n)]
-
-    x_bool = [And(x>=0, x<=1) for x in Xij]
-    y_bool = [And(y>=0, y<=1) for y in Yij]
-    model.add([*x_bool,*y_bool])
-    
-    # No overlapping constraints
-    no = nof(X, Y, Xij, Yij, widths, heights, W, Hmax, n)
-    model.add(no)
-
-    # VERBOSE
-    if verbose:
-        print(model.check())
-        print(model.model())
-        pass
-
-    # SOLVE THE INSTSNCE
-    h = model.minimize(d)
-    print(model.check())
-    print(model.lower(h))
-   
-   # EXTRACT THE SOLUTION FROM THE MODEL
-    m = model.model()
-    m_dict={str(x[0]):x[1] for x in sorted ([(d, m[d]) for d in m], key = lambda x: str(x[0]))}
-    sol=[[W,int(str(m_dict['d']))]]
-    for i in range(n):
-        sol.append([widths[i],heights[i],int(str(m_dict[f"x__{i}"]))+1,int(str(m_dict[f"y__{i}"]))+1])
-    
-    print("Solution: ",sol)
-
-    if show:
-        utils.show(sol)
-
-    if output:
-        utils.write_out(output,str(sol))
-        print("Solution saved: ", (Path(currentdir) / output))
-
-    if export:
-        outdir=Path(currentdir+"/exported")
-        outfile=outdir / (export+".smt2")
-        if(not outdir.exists() or not outdir.is_dir()):
-            outdir.mkdir()
-
-        with outfile.open("w") as out:
-            for line in model.sexpr():
-                out.write(line)
-            out.write("(check-sat)")
-            out.close()
-        print("SMT_LIB model exported: "+ str(outfile))
-
-    # EVENTUALMENTE SCRIPT DI AMADINI CON OPZIONI
-
-def usage():
-    print("Usage: python {} [-v] [-h] [-r] [-t timeout] [-i infile] [-o outfile] [instn]".format(sys.argv[0].split("\\")[-1].split("/")[-1]))
+    # Solve the instance
+    o, m, t = bisection(instance,options["timeout"],options['verbose'])
+    if options["timeout"] and t>options["timeout"]:  print("Time limit reached")
+    if m:
+        sol=format_solution(m, o, instance['dim'], instance['n'], instance['w'])
+        print("Instance solved")
+        if options["verbose"]: print("Minimum Height Found: ", o)
+        print("Instance Model:", sol)
+        if options["verbose"]: print("Solved in: {}s".format(t))
+        print("-----------------------")
+        # Write out the solutions
+        if options['output']:
+            utils.writeSolution(options['output'],sol)
+        # Plot the solution
+        if options['show']:
+            utils.display_solution(sol)
+    else: print("No solution found!")
 
 def main():
+    # report
+    filename=currentdir+"/report.csv"
+    with open(filename, 'w') as outfile:
+        outfile.write("Instance;Time;Solution\n")
+    for i in range(1,41):
+        print("SOLVING: ", i)
+        instance = utils.loadInstance(currentdir+f"/../instances/ins-{i}.txt")
 
-    output = None #by default the result is showed in stdout
-    input = None
-    export=None
-    show=False
-    verbose = False
-    timeout=None #default timeout 5 minutes
-    rotationsAllowed=False
-    instn=[]
-    
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:vi:t:r", ["help","input=" "output=","export=","timeout=","show-result"])
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print(err)
-        usage()
-        sys.exit(2)
-    
-    for o, a in opts:
-        if o in ("-h", "--help"): #Help
-            usage()
-            sys.exit()
-        elif o == "-v":           #Verbose
-            verbose = True
-        elif o == "-r":         #Rotations
-            rotationsAllowed=True
-        elif o in ("-t","--timeout"): #Timeout
-            try: timeout=int(a)
-            except Exception as e: 
-                print(e)
-                sys.exit(2) 
-        elif o in ("-o", "--output"): # Out file
-            output = a
-        elif o in ("-i","--input"): # Input file
-            input=a
-        elif o in ("--export"): # Model export file
-            export=a   
-        elif o in ("--show-result"): # Plot result
-            show=True
-        else:           
-            assert False, "unhandled option"
-    
-    if input:
-        if len(args): 
-            print("Do not specify an instance number if you have already specified an input file")
-            usage()
-            sys.exit(2)
-    elif len(args)!=1:
-        print("You need to specify an instance number or an input file")
-        usage()
-        sys.exit(2)
-    else:     
-        try:             
-            instn=int(args[0])
-            if instn<1 or instn> 40: raise Exception
-            input=f"../instances/ins-{instn}.txt" 
-        except Exception as e:
-            print("Error: instn must be an integer between 1 and 40")
-            usage()
-            sys.exit(2)
+        print(instance)
+        o, m, t = bisection(instance,300)
 
-    instance=utils.loadInstance(currentdir+"/"+input)
-   
-    print("VLSI floorplanning problem\n")
-    print("Rotations: "+("allowed" if rotationsAllowed else "not allowed"))
-    print("Timeout={}".format(timeout if timeout else "Not set"))
+        m = format_solution(m, o, instance['dim'], instance['n'], instance['w'])
+        print(m)
 
-    options={
-        "verbose":verbose,
-        "output":output,
-        "timeout":timeout,
-        "show" : show,
-        "rotationsAllowed":rotationsAllowed,
-        "export":export   
-    }
-
-    solveInstance(instance,options)
+        if(t<300):
+            with open(filename, 'a') as outfile:
+                outfile.write("{};{};{}\n".format(i,t,m))
+        else:
+            with open(filename, 'a') as outfile:
+                outfile.write("{};{};{}\n".format(i,t,m))
+        print("Finished in:", t)
 
 if __name__=="__main__":
     main()

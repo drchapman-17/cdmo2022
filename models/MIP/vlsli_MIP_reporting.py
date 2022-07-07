@@ -5,18 +5,37 @@ import inspect
 import getopt
 from pulp import *
 import numpy as np
-
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, currentdir) 
 import utils
 
-report=currentdir+"/report_gurobi_2lb.txt"
-outfile=open(report, 'w')
-outfile.write("REPORT:\n\n")
+def warmStart(stupidSol,H,X,Y,R,U):
+    n=len(X)
+    x_sol=[e[2]-1 for e in stupidSol[1:]]
+    y_sol=[e[3]-1 for e in stupidSol[1:]]
+    H.setInitialValue(stupidSol[0][1])
+    for i in range(n):
+        X[i].setInitialValue(x_sol[i])
+        Y[i].setInitialValue(y_sol[i])
+        for j in range(n):
+            if i!=j:
+                if x_sol[i]+p[i]<=x_sol[j]:
+                    R[i][j].setInitialValue(0)
+                    R[j][i].setInitialValue(1)
+                if y_sol[i]+q[i]<=y_sol[j]:
+                    U[i][j].setInitialValue(0)
+                    U[j][i].setInitialValue(1)
 
-for instn in range(1,19):
+report=currentdir+"/report_curobi_2.txt"
+# solvername='CPLEX_PY'
+solvername='GUROBI'
+    
+outfile=open(report, 'w')
+outfile.write("Instance;Time;Solution\n")
+ws=False # Warm Start
+for instn in range(1,41):
     print("SOLVING: ", instn)
     instance = utils.loadInstance(currentdir+f"/../instances/ins-{instn}.txt")
  
@@ -24,35 +43,27 @@ for instn in range(1,19):
     M=1000
     WC=instance["w"]
     n=instance["n"]
-    p=[i[0] for i in instance["dim"]]
-    q=[i[1] for i in instance["dim"]]
-
+    dim=instance['dim']
+    p=[i[0] for i in dim]
+    q=[i[1] for i in dim]
+    largest_idx=np.argmax([p[i]*q[i] for i in range(n)])
+    tot_area=sum([w_i*h_i for w_i,h_i in zip(p,q)])
+    stupidSol=utils.computeMostStupidSolution(instance)
+    Hmin = tot_area/WC
+    Hmax=stupidSol[0][1]
+    
     # DECISION VARIABLES
-    W=[] # Width of block
-    H=[] # Height of block
     Xl=[] # left boundary of block
-    Xr=[] # right boundary of block
-    Yt=[] # top boundary of block
     Yb=[] # bottom boundary of block
     R=[] # 0 if block i is to the left of block j
     U=[] # 0 if block i is below block j
     V=[] # rotations
-    tot_area=sum([w_i*h_i for w_i,h_i in zip(p,q)])
-    Hmin = tot_area/WC
-#    Hmax=sum(q)
-    Hmax = 2*max(max([[d[0],d[1]] for d in zip(p,q)], key=lambda d:d[0]*d[1])[1],Hmin)+1
-    print(Hmax)
-    biggest_i=np.argmax([p[i]*q[i] for i in range(n)])
 
     HC=LpVariable(f"H_c",Hmin,Hmax,LpInteger)
     for i in range(n):
-        W.append(LpVariable(f"W_{i}",0,None,LpInteger))
-        H.append(LpVariable(f"H_{i}",0,None,LpInteger))
         Xl.append(LpVariable(f"Xl_{i}",0,None,LpInteger))
-        Xr.append(LpVariable(f"Xr_{i}",0,None,LpInteger))
-        Yt.append(LpVariable(f"Yt_{i}",0,None,LpInteger))
         Yb.append(LpVariable(f"Yb_{i}",0,None,LpInteger))
-        V.append(LpVariable(f"V_{i}",0,1,LpInteger))
+        # V.append(LpVariable(f"V_{i}",0,1,LpInteger))
         tempR=[]
         tempU=[]
         for j in range(n):
@@ -65,13 +76,14 @@ for instn in range(1,19):
         R.append(tempR)
         U.append(tempU)
 
+    if ws: warmStart(stupidSol,HC,Xl,Yb,R,U) # NON SO SE SERVE PORCODDI
+    
     # PROBLEM FORMULATION    
     problem=LpProblem("VLSI_Problem", LpMinimize)
 
     problem += HC, "Chip_Height"
-    #  problem += HC*WC-tot_area >=0 ,"Empty_space"
-    problem += 2*Xl[biggest_i]<=WC-p[biggest_i], "Largest_rectangle_Xpos"
-    problem += 2*Yb[biggest_i]<=HC-q[biggest_i], "Largest_rectangle_Ypos"
+    problem += 2*Xl[largest_idx]<=WC-p[largest_idx], "Largest_rectangle_Xpos"
+    problem += 2*Yb[largest_idx]<=HC-q[largest_idx], "Largest_rectangle_Ypos"
     for i in range(n):
         problem += Yb[i]+q[i]<=HC,  f"Max_{i}_Ypos"
         #problem += W[i]== V[i]*p[i] + (1-V[i])*q[i], f"B_{i}_width"
@@ -91,17 +103,12 @@ for instn in range(1,19):
                         problem+= R[i][j]==1,f"B_{i}_{j}_same_size_r"    
                         problem+= U[i][j]==1,f"B_{i}_{j}_same_size_u"   
 
-
-
-    solvername='CPLEX_PY'
-    solvername='GUROBI'
-    
-    #Build the solverModel for your preferred
-    solver = getSolver(solvername, timeLimit=300,msg=0)
+    # BUILD SOLVER
+    solver = getSolver(solvername, timeLimit=300,msg=0,warmStart=ws)
     solver.buildSolverModel(problem)
     solver_model = problem.solverModel
 
-    #Solve P
+    # SOLVE
     if solvername=="CPLEX_PY":  
         start=solver_model.get_time()
     solver.callSolver(problem)
@@ -109,7 +116,8 @@ for instn in range(1,19):
         t=solver_model.get_time()-start
     solver.findSolutionValues(problem)
     sol=None
-    # retrieve the objective value of the best integer solution
+    
+    # RETRIEVE THE SOLUTION
     if solvername=="GUROBI":
         if solver_model.Status == 2:
             h = value(problem.objective)
@@ -125,8 +133,9 @@ for instn in range(1,19):
         h = value(problem.objective)
         sol=[[WC,int(HC.value())]]+[[p[i],q[i],round(Xl[i].value())+1,round(Yb[i].value())+1] for i in range(n)]
     
-     
+    # PRINT OUT THE RESULT 
     print("Time:{}\tSol:{}\n".format(t,sol))
-    outfile.write("Instance:{}\tTime:{}\tSol:{}\n".format(instn,t,sol))
+    outfile.write("{};{};{}\n".format(instn,t,sol))
+
 outfile.close()
     
