@@ -1,10 +1,10 @@
-import getopt,sys
+import getopt,sys,os,inspect
 import utils
 import SMT.vlsi_SMT as SMT
 import MIP.vlsi_MINLP as LP
 import CP.vlsi_CP as CP
-
 import warnings
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 warnings.filterwarnings("error")
 
 def main():
@@ -61,7 +61,7 @@ def main():
         usage()
         sys.exit(2)
     if instn:
-        input=f"instances/ins-{instn}.txt"
+        input=currentdir+f"/instances/ins-{instn}.txt"
 
     # Check if model name is valid
     if(len(args)!=1):
@@ -81,7 +81,7 @@ def main():
     print("Solving instance: {}".format(instn))
     print(f"Solving strategy: {model}")
     print("Rotations: "+("allowed" if rotationsAllowed else "not allowed"))
-    print("Timeout={}".format(f"{timeout} s" if timeout else "not set"))
+    print("Timeout: {}".format(f"{timeout}s" if timeout else "not set"))
     if verbose: print("Verbose output activated")
 
     # Build options
