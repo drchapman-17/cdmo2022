@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 import sys 
 
 def loadInstance(path):
@@ -212,6 +214,46 @@ def readSolution(filename):
             b = remaining_lines[i].split()
             sol.append([int(b[0]),int(b[1]),int(b[2])+1,int(b[3])+1])
     return sol 
+
+def report_barplot(model, save_image = True):
+    # model must be a string between: CP, SAT, SMT, MIP
+    # the csv must be have as columns: Instance, Time, Solution
+    # The instances that can't be resolved in time must have in 'Time' None
+    # The name of the csv must be i.e. report_CP.csv, report_rotation_CP.csv
+
+    csv_no_rotation = 'report_'+model+'.csv'
+    csv_rotation = 'report_rotation_'+model+'.csv'
+    name_image = 'report_'+model+'.png'
+
+    df = pd.read_csv(csv_no_rotation, sep=';')
+    df_flip = pd.read_csv(csv_rotation, sep=';')
+
+    df['mode'] = 'no rotation'
+    df_flip['mode'] = 'rotation'
+    df = pd.concat([df, df_flip])
+
+    T = df.loc[~df.isna().any(axis = 1), 'Time'].astype(float).max()
+
+    df.loc[df.isna().any(axis = 1), 'mode']='failure'
+    df.loc[df.isna().any(axis = 1), 'Time']=T
+    df['Time'] = df['Time'].astype(float)
+
+    colors = ['g', 'b', 'r']
+    sns.set_palette(sns.color_palette(colors))
+    plt.figure(figsize = (15,10))
+    sns.barplot(data = df, x = 'Instance', y = 'Time', hue = 'mode', orient = 'v', hue_order=['no rotation', 'rotation', 'failure'])
+
+    plt.xticks(fontsize = 'large')
+    plt.yticks(fontsize = 'large')
+    plt.xlabel('N instance', size = 15)
+    plt.ylabel('Execution time', size = 15)
+    plt.title(model+' execution time', size = 20)
+    plt.legend(loc = 'upper left', fontsize='x-large')
+
+    if save_image:
+        plt.savefig(name_image, edgecolor='w', facecolor = 'w')
+
+    plt.show()
 
 if __name__=="__main__":
     # for i in range(1,41):
