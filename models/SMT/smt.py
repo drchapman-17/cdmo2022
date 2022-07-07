@@ -269,6 +269,6 @@ if __name__=="__main__":
                 outfile.write("Instance:{}  Height:{}  Time:{}\n".format(i,o,t))
         else:
             with open(filename, 'a') as outfile:
-                outfile.write("Instance:{}  Height:NO  Time:{}\n".format(i,t))
+                outfile.write("Instance:{}  Height:NO  Time:{}\n".format(i,0))
         print("Finished in:", t)    
 

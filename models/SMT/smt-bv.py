@@ -12,6 +12,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, currentdir) 
 import utils
+
 # ROBA RUBATA
 def z3_cumulative(start, duration, resources, total):
 
@@ -41,11 +42,11 @@ def format_solution(m, o, dim, n, W):
 
     return schema
 
-def distinct_coordinates(Xs, Ys, W, n):
+# def distinct_coordinates(Xs, Ys, W, n):
     
-    diff = [ W*Xs[i]+Ys[i]  for i in range(n)]
+#     diff = [ W*Xs[i]+Ys[i]  for i in range(n)]
 
-    return Distinct(diff)
+#     return Distinct(diff)
 
 def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
 
@@ -56,14 +57,14 @@ def boundary_constraints(Xs, Ys, Ws, Hs, W, d, n):
 
     return [*x_width, *y_height, *x_morethan_0, *y_morethan_0]
 
-def no_overlap(Xs, Ys, Xij, Yij, Ws, Hs, W, H, n):
-    no_1 = [ Xs[i] + Ws[i] <= Xs[j] + W*(Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
-    no_2 = [ Xs[i] - Ws[j] >= Xs[j] - W*(1 - Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
-    no_3 = [ Ys[i] + Hs[i] <= Ys[j] + H*(1 + Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
-    no_4 = [ Ys[i] - Hs[j] >= Ys[j] - H*(2 - Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
-    return [*no_1,*no_2,*no_3,*no_4]
+# def no_overlap(Xs, Ys, Xij, Yij, Ws, Hs, W, H, n):
+#     no_1 = [ Xs[i] + Ws[i] <= Xs[j] + W*(Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
+#     no_2 = [ Xs[i] - Ws[j] >= Xs[j] - W*(1 - Xij[i*n+j] + Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
+#     no_3 = [ Ys[i] + Hs[i] <= Ys[j] + H*(1 + Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
+#     no_4 = [ Ys[i] - Hs[j] >= Ys[j] - H*(2 - Xij[i*n+j] - Yij[i*n+j]) for i in range(n) for j in range(n) if i<j ]
+#     return [*no_1,*no_2,*no_3,*no_4]
 
-def no_overlap2(Xs, Ys, Ws, Hs, W, H, n):
+def no_overlap(Xs, Ys, Ws, Hs, W, H, n):
     no = [ Or(
                 And(
                     Xs[i] + Ws[i] <= Xs[j], 
@@ -135,8 +136,7 @@ def buildModel(instance, o):
     # Block Position Vectors
     X = IntVector('x', n)
     Y = IntVector('y', n)
-    #X = [ BitVec('x__{}'.format(i), int(log2(H))) for i in range(n)]
-    #Y = [ BitVec('y__{}'.format(i), int(log2(H))) for i in range(n)]
+
 
     # Block widths and heights
     widths = [d[0] for d in dim]
@@ -146,13 +146,7 @@ def buildModel(instance, o):
     d = o
     
     #Solver Declaration
-
-    #s =  SolverFor('ALL')
     s = Tactic('lra').solver()
-    #s = SimpleSolver()
-    #s.set("smt.ematching", False)
-    #Height is >= 0
-    #s.add(d>0)
 
     #Boundary
     # Max X Domain
@@ -164,52 +158,10 @@ def buildModel(instance, o):
             if i!=largest_block else And(0 <= Y[i], Y[i] <= int(d-heights[i])/2) 
             for i in range(n)])
 
-    #s.add(X[largest_block]==0)
-    #s.add(Y[largest_block]==0)
-    # Largest block constraint
-    #s.add(And(0 <= X[largest_block], 2*X[largest_block] <= W-widths[largest_block]))
-    #s.add(And(0 <= Y[largest_block], 2*Y[largest_block] <= d-heights[largest_block]))
 
-    rotationsAllowed=False
-    ## IF NO ROTATION
-    # Boundary constraints for each block
-    if rotationsAllowed:
-        pass
-    else:
-        no = no_overlap2(X, Y, widths, heights, W, H, n)
-        #s.add(no)
-        s.add(no)
+    no = no_overlap(X, Y, widths, heights, W, H, n)
 
-    # IF ROTATION
-
-    # VERBOSE
-    if verbose:
-        #print(s.check())
-        #print(s.model())
-        pass
-    
-    # print("sto scrivendo")
-    # with open("temp/model.smt2", 'w') as outfile:
-    #     outfile.write("(set-logic LIA)\n")
-    #     for line in opt.sexpr():
-    #         outfile.write(line)
-    #     outfile.write("(minimize d)\n")
-    #     outfile.write("(get-objectives)\n(exit)")
-    # print("ho finito")
-    # init = time()
-    # h = opt.minimize(d)
-    # print(opt.check())
-    
-    # print("Finished in:", time()-init)
-    # print(opt.lower(h))
-
-    #print(opt.model())
-    
-
-
-    #print(format_solution(opt, dim, n, W, h))
-    #print(opt.statistics())
-    ## SCRIPT DI AMADINI CON OPZIONI
+    s.add(no)
 
     return s
     
@@ -217,14 +169,15 @@ def bisection(instance):
 
     init = time()
 
-    LB = int(sum([p[0]*p[1] for p in instance['dim']])/instance['w'])
+    LB = int(math.ceil(sum([p[0]*p[1] for p in instance['dim']])/instance['w']))
 
     #UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
     naiive = utils.computeMostStupidSolution(instance)
     #print(heuristic)
     #UB = int(3*(LB/2))
     UB = naiive[0][1]+1
-    print(naiive)
+    #print(naiive)
+
     m=None
 
     print('lb', LB)
@@ -263,11 +216,12 @@ def bisection(instance):
     return o, m, time()-init
 
 if __name__=="__main__":
-    set_option(precision=0)
-    filename=currentdir+"/report-bv"
+    # set_option("parallel.enable","true")
+    # set_option("parallel.threads.max","4")
+    filename=currentdir+"/report.csv"
     with open(filename, 'w') as outfile:
-        outfile.write("REPORT2 LRA 3*(LB/2) i!=j UB+1:\n\n")
-    for i in range(34,41):
+        outfile.write("Instance;Time;Solution\n")
+    for i in range(1,41):
         print("SOLVING: ", i)
         instance = utils.loadInstance(currentdir+f"/../instances/ins-{i}.txt")
 
@@ -279,9 +233,9 @@ if __name__=="__main__":
 
         if(t<300):
             with open(filename, 'a') as outfile:
-                outfile.write("Instance:{}  Height:{}  Time:{}  SOL:{}\n".format(i,o,t,m))
+                outfile.write("{};{};{}\n".format(i,t,m))
         else:
             with open(filename, 'a') as outfile:
-                outfile.write("Instance:{}  Height:NO  Time:{}  NaiiveSOL:\n".format(i,t,m))
+                outfile.write("{};{};{}\n".format(i,t,m))
         print("Finished in:", t)    
 
