@@ -148,7 +148,7 @@ def runCPInstance(inst,options):
             print(key,"=",val) 
         print("\n__________________")
     if show:
-        utils.show(json.loads(str(result)))
+        utils.display_solution(json.loads(str(result)))
     if output:
         utils.write_out(output,str(result))
 

@@ -21,21 +21,26 @@ def getNewDims(model,widths,heights,f):
             h.append(heights[i])
     return w,h 
 
-def getCoords(m, x, y, W, H, n):
+def getCoords(m, x, y, W, H, n,flip):
     x_sol = []
     y_sol = [] 
     
     for i in range(n):
         j = 0
+        f=m.evaluate(flip[i])
         while j < W:
+            #print(x[i][j],m.evaluate(x[i][j]),"\n0\n")
             if m.evaluate(x[i][j]):
+                #print(x[i][j], m.evaluate(x[i][j]))
                 x_sol.append(j)
                 break
             j += 1
 
         j = 0
         while j < H:
+            #print(y[i][j],m.evaluate(y[i][j]),"\n1\n")
             if m.evaluate(y[i][j]):
+                #print(y[i][j], m.evaluate(y[i][j]))
                 y_sol.append(j)
                 break
             j += 1
@@ -95,7 +100,7 @@ def read(filename):
         l.append([a[i][0],a[i][1],b[i][0]+1,b[i][1]+1])
     return l 
 
-def solveInstance(instance):
+def solveInstance(instance,options):
     n = instance['n']
     W = instance['w']
     widths  = [i[0] for i in instance['dim']]
@@ -158,11 +163,6 @@ def solveInstance(instance):
             dim1i,dim2i=(widths[i],heights[i]) if not fi else (heights[i],widths[i])
             dim1j,dim2j=(widths[j],heights[j]) if not fj else (heights[j],widths[j])
             cts=[]
-
-            if dim1i == 26:
-                print(W, dim1i)
-                print(len(px))
-                print(len(py))
 
             # lr(r_i,r_j)-> x_j > w_i
             cts.append(Or(
@@ -282,16 +282,19 @@ def solveInstance(instance):
                 # LR 
                 if i<j:
                     s.add(Or(lr[i][j],lr[j][i],ud[i][j],ud[j][i]))
-                    
+                    wi,wj,hi,hj=widths[i],widths[j],heights[i],heights[j]                 
                     # lr(r_i,r_j)-> x_j > w_i
-
-                    s.add(Or(
-                        And(Not(f[i]),Not(f[j]),*no_overlap(i,j,False,False)),
-                        And(Not(f[i]),f[j],*no_overlap(i,j,False,True)),
-                        And(f[i],Not(f[j]),*no_overlap(i,j,True,False)),
-                        And(f[i],f[j],*no_overlap(i,j,True,True)),
-                    ))
-                    
+                    cts=[] 
+                    if wi<=W and hi<=H and wj<=W and hj<=H:  
+                        cts.append(And(Not(f[i]),Not(f[j]),*no_overlap(i,j,False,False)))
+                    if wi<=H and hi<=W and wj<=W and hj<=H:  
+                        cts.append(And(f[i],Not(f[j]),*no_overlap(i,j,True,False)))
+                    if wi<=W and hi<=H and wj<=H and hj<=W:
+                        cts.append(And(Not(f[i]),f[j],*no_overlap(i,j,False,True)))
+                    if wi<=H and hi<=W and wj<=H and hj<=W:
+                        cts.append(And(f[i],f[j],*no_overlap(i,j,True,True)))
+                    s.add(Or(cts))
+                                    
         if s.check() == sat:
             ub = H
             print('SAT: ub ->',ub)
@@ -317,7 +320,7 @@ def solveInstance(instance):
     e_time = time.time() - s_time
     print("Time:", e_time)
     model=s.model()
-    cx,cy=getCoords(model, px, py, W, H, n)
+    cx,cy=getCoords(model, px, py, W, H, n,f)
     new_w,new_h=getNewDims(model,widths,heights,f)
 
     sol=[[W,H]]+[[new_w[i],new_h[i],cx[i]+1,cy[i]+1] for i in range(n)]
@@ -343,7 +346,7 @@ if __name__=="__main__":
 
     instn=int(sys.argv[1])
     instance=utils.loadInstance(currentdir+f"/../instances/ins-{instn}.txt")
-    sol=solveInstance(instance)
+    sol=solveInstance(instance,{})
     W=sol[0][0]
     H=sol[0][1]
     n=len(sol[1:])
@@ -353,9 +356,8 @@ if __name__=="__main__":
     cy=[s[3]-1 for s in sol[1:]]
     # WRITE OUT
     write_file(W, H, n, widths,
-                    heights, cx, cy, currentdir+'./outputs_rot/out-' + str(instn) + '.txt')
+                    heights, cx, cy, currentdir+'./outputs_opt/out-' + str(instn) + '.txt')
     # DISPLAY
-    #utils.display_solution(sol,title=f'Plate {instn}')
-    print(sol)
+    utils.display_solution(sol,title=f'Plate {instn}')
 
 
