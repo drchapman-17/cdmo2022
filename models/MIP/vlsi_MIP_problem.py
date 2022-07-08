@@ -1,3 +1,4 @@
+from ctypes import util
 from pulp import *
 import numpy as np
 import inspect
@@ -9,7 +10,7 @@ import utils
 
 class VLSI_Problem():
 
-    def __init__(self,instance,rotationsAllowed=False):
+    def __init__(self,instance,rotationsAllowed=False,initialValues=None):
         self.instance=instance
         self.rotationsAllowed=rotationsAllowed
         #PARAMETERS
@@ -59,12 +60,27 @@ class VLSI_Problem():
                     tempU.append(None)
             R.append(tempR)
             U.append(tempU)
+        
+        self.variables={
+            'HC':HC,
+            'X':Xl,
+            'Y':Yb,
+            'W':W,
+            'H':H,
+            'R':R,
+            'U':U,
+            'F':F
+        }
 
+        # SET WARM START VALUES
+        if initialValues:
+            self.__setInitialValues__(initialValues)
+        
         # CONSTRAINT REDUCTIONS
         
         for i in range(n):
             if not rotationsAllowed:
-                if i!=largest_idx and  p[i]>(WC-p[largest_idx])/2:
+                if i!=largest_idx and  p[i]>(WC-p[largest_idx])/2: # Block would occupy the entire area available for the largest block, avoid it 
                     R[i][largest_idx]=1
                 for j in range(n):
                     if i!=j and p[i]+p[j]>WC: # Blocks are too wide together, cannot be stacked horizontally
@@ -77,8 +93,6 @@ class VLSI_Problem():
                     R[i][j]=1 
                     U[i][j]=1 
 
-        #if ws: warmStart(stupidSol,HC,Xl,Yb,R,U) # NON SO SE SERVE PORCODDI
-        
         # PROBLEM FORMULATION    
         problem=LpProblem("VLSI_Problem", LpMinimize)
 
@@ -86,33 +100,63 @@ class VLSI_Problem():
         problem += 2*Xl[largest_idx]<=WC-p[largest_idx], "Largest_rectangle_Xpos"
         problem += 2*Yb[largest_idx]<=HC-q[largest_idx], "Largest_rectangle_Ypos"
         for i in range(n):
-            problem += W[i]== (1-F[i])*p[i] + F[i]*q[i], f"B_{i}_width"
-            problem += H[i]== F[i]*p[i] + (1-F[i])*q[i], f"B_{i}_height"
+            problem += W[i]==(1-F[i])*p[i] + F[i]*q[i], f"B_{i}_width"
+            problem += H[i]==F[i]*p[i] + (1-F[i])*q[i], f"B_{i}_height"
             problem += Yb[i]+H[i]<=HC,  f"Max_{i}_Ypos"
             problem += Xl[i]+W[i]<=WC,  f"Max_{i}_Xpos"
             for j in range(n):
                 problem += Xl[i]+W[i]-Xl[j]<=WC,  f"B_{i}_{j}_width_less_than_chip"
                 problem += Yb[i]+H[i]-Yb[j]<=HC,  f"B_{i}_{j}_height_less_than_chip"
-
                 if i!=j:
                     problem += Xl[i]+W[i]<=Xl[j]+M*R[i][j], f"B_{i}_{j}_non_overlap_horizontal"
                     problem += Yb[i]+H[i]<=Yb[j]+M*U[i][j], f"B_{i}_{j}_non_overlap_vertical"
+                    # problem += W[i]+(1-R[i][j])*W[j]<=WC
                 if i<j:
                     problem += R[i][j]+R[j][i]+U[i][j]+U[j][i]<=3, f"B_{i}_{j}_at_most_one_rel"                    
 
-        self.variables={
-            'WC':WC,
-            'HC':HC,
-            'X':Xl,
-            'Y':Yb,
-            'W':W,
-            'H':H
-        }
         self.problem=problem
 
-    def solve(self,timeLimit=None,verbose=False):
+    def __setInitialValues__(self,sol):
+        if not utils.isFeasible(sol):
+            raise Exception("The provided solution is unfeasible!")
+        p=[d[0] for d in self.instance['dim']]
+        q=[d[1] for d in self.instance['dim']]
+        HC=self.variables['HC']
+        X=self.variables['X']
+        Y=self.variables['Y']
+        H=self.variables['H']
+        W=self.variables['W']
+        R=self.variables['R']
+        U=self.variables['U']
+        F=self.variables['F']
+        n=len(X)
+        x_sol=[e[2]-1 for e in sol[1:]]
+        y_sol=[e[3]-1 for e in sol[1:]]
+        HC.setInitialValue(sol[0][1])
+        for i in range(n):
+            X[i].setInitialValue(x_sol[i])
+            Y[i].setInitialValue(y_sol[i])
+            if self.rotationsAllowed:
+                if p[i]==sol[i+1][0] and q[i]==sol[i+1][1]:
+                    F[i].setInitialValue(0)
+                    W[i].setInitialValue(p[i])
+                    H[i].setInitialValue(q[i]) 
+                else:
+                    F[i].setInitialValue(1) 
+                    W[i].setInitialValue(q[i])
+                    H[i].setInitialValue(p[i]) 
+            for j in range(n):
+                if i!=j:
+                    if x_sol[i]+p[i]<=x_sol[j]:
+                        R[i][j].setInitialValue(0)
+                        R[j][i].setInitialValue(1)
+                    if y_sol[i]+q[i]<=y_sol[j]:
+                        U[i][j].setInitialValue(0)
+                        U[j][i].setInitialValue(1)
+
+    def solve(self,timeLimit=None,verbose=False,ws=False):
         # BUILD SOLVER
-        solver = getSolver('GUROBI', timeLimit=timeLimit,msg=verbose,gapRel=0)
+        solver = getSolver('GUROBI', timeLimit=timeLimit,msg=verbose,gapRel=0,ws=ws)
         solver.buildSolverModel(self.problem)
         solver.callSolver(self.problem)
         solver.findSolutionValues(self.problem)
@@ -129,9 +173,9 @@ class VLSI_Problem():
     def getSolution(self):
         solver_model=self.problem.solverModel
         if solver_model.SolCount > 0:
-            h = solver_model.PoolObjVal
             vn=[var.VarName for var in solver_model.getVars()]
             vv=[var.X for var in solver_model.getVars()]
+
             solution=[[self.instance["w"],int(vv[vn.index("H_c")])]]
             for i in range(self.instance["n"]):
                 if self.rotationsAllowed:
@@ -159,13 +203,13 @@ class VLSI_Problem():
         #     H=[h[1] for h in self.instance['dim']]
         # solution=[[WC,HC]]+[[W[i],H[i],X[i]+1,Y[i]+1] for i in range(self.instance['n'])]
 
-"""
+""""""
 # DEBUG
-instance=utils.loadInstance("instances/ins-41.txt")
-model=VLSI_Problem(instance,True)
-sol=model.solve(timeLimit=2,verbose=True)
+instance=utils.loadInstance("instances/ins-35.txt")
+stupid=utils.computeMostStupidSolution(instance,True)
+model=VLSI_Problem(instance,False)
+model.solve(timeLimit=300,verbose=True,ws=True)
 sol=model.getSolution()
 print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
 if sol:
     utils.display_solution(sol)
-"""
