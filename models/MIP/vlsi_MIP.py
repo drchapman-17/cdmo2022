@@ -5,7 +5,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, currentdir) 
-from vlsi_MINLP_problem import VLSI_Problem
+from vlsi_MIP_problem import VLSI_Problem
 import utils
 
 def solveInstance(instance,options):
@@ -30,6 +30,7 @@ def solveInstance(instance,options):
     print("Solving..",end="")
     problem.solve(timeLimit=timeout,verbose=verbose)  
     print("Solved!\nStatus:", problem.getStatusMessage())
+    print("Elapsed time:",problem.getElapsedTime())
     solution=problem.getSolution()
     if(solution):
         print("Solution:",solution)

@@ -2,16 +2,18 @@ from time import time
 import numpy as np
 import os,sys 
 import inspect
-import getopt
 from pulp import *
 import numpy as np
+from vlsi_MIP_problem import VLSI_Problem
+
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, currentdir) 
 import utils
 
-def warmStart(stupidSol,H,X,Y,R,U):
+def warmStart(stupidSol,p,q,H,X,Y,R,U):
     n=len(X)
     x_sol=[e[2]-1 for e in stupidSol[1:]]
     y_sol=[e[3]-1 for e in stupidSol[1:]]
@@ -28,17 +30,27 @@ def warmStart(stupidSol,H,X,Y,R,U):
                     U[i][j].setInitialValue(0)
                     U[j][i].setInitialValue(1)
 
-report=currentdir+"/report_curobi_2.txt"
+report=currentdir+"/report_gurobi_rot.csv"
 # solvername='CPLEX_PY'
 solvername='GUROBI'
     
 outfile=open(report, 'w')
 outfile.write("Instance;Time;Solution\n")
 ws=False # Warm Start
-for instn in range(1,41):
+
+for instn in range(1,41):    
     print("SOLVING: ", instn)
     instance = utils.loadInstance(currentdir+f"/../instances/ins-{instn}.txt")
- 
+    problem=VLSI_Problem(instance)
+    model=VLSI_Problem(instance,True)
+    model.solve(timeLimit=300,verbose=False)
+    sol=model.getSolution()
+    t=model.getElapsedTime()
+    # PRINT OUT THE RESULT 
+    print("Time:{}\tSol:{}\n".format(t,sol))
+    outfile.write("{};{};{}\n".format(instn,t,sol))
+
+    """
     #PARAMETERS
     M=1000
     WC=instance["w"]
@@ -76,6 +88,18 @@ for instn in range(1,41):
         R.append(tempR)
         U.append(tempU)
 
+    
+    # CONSTRAINT REDUCTIONS
+    for i in range(n):
+        for j in range(n):
+            if i!=j:
+                if p[i]+p[j]>WC: # Blocks are too wide together, cannot be stacked horizontally
+                    R[i][j]=1
+            if i<j:
+                if p[i]==p[j] and q[i]==p[j]: # Blocks have equal size, arbitrarily fix one to be in the low/left position   
+                    R[i][j]=1 
+                    U[i][j]=1 
+  
     if ws: warmStart(stupidSol,HC,Xl,Yb,R,U) # NON SO SE SERVE PORCODDI
     
     # PROBLEM FORMULATION    
@@ -95,13 +119,13 @@ for instn in range(1,41):
             if i!=j:
                 problem += Xl[i]+p[i]<=Xl[j]+M*R[i][j], f"B_{i}_{j}_non_overlap_horizontal"
                 problem += Yb[i]+q[i]<=Yb[j]+M*U[i][j], f"B_{i}_{j}_non_overlap_vertical"
-                if p[i]+p[j]>WC:
-                    problem+= R[i][j]==1,f"B_{i}_{j}_too_large"
+            # if p[i]+p[j]>WC:    
+            #         problem+= R[i][j]==1,f"B_{i}_{j}_too_large"
             if i<j:
                 problem += R[i][j]+R[j][i]+U[i][j]+U[j][i]<=3, f"B_{i}_{j}_at_most_one_rel"                    
-                if p[i]==p[j] and q[i]==p[j]:  
-                        problem+= R[i][j]==1,f"B_{i}_{j}_same_size_r"    
-                        problem+= U[i][j]==1,f"B_{i}_{j}_same_size_u"   
+                # if p[i]==p[j] and q[i]==p[j]:  
+                #         problem+= R[i][j]==1,f"B_{i}_{j}_same_size_r"    
+                #         problem+= U[i][j]==1,f"B_{i}_{j}_same_size_u"   
 
     # BUILD SOLVER
     solver = getSolver(solvername, timeLimit=300,msg=0,warmStart=ws)
@@ -132,10 +156,10 @@ for instn in range(1,41):
     if solvername=="CPLEX_PY":
         h = value(problem.objective)
         sol=[[WC,int(HC.value())]]+[[p[i],q[i],round(Xl[i].value())+1,round(Yb[i].value())+1] for i in range(n)]
-    
     # PRINT OUT THE RESULT 
     print("Time:{}\tSol:{}\n".format(t,sol))
     outfile.write("{};{};{}\n".format(instn,t,sol))
+    """    
 
 outfile.close()
     

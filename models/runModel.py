@@ -1,7 +1,7 @@
 import getopt,sys,os,inspect
 import utils
 import SMT.vlsi_SMT as SMT
-import MIP.vlsi_MINLP as LP
+import MIP.vlsi_MIP as LP
 import CP.vlsi_CP as CP
 import warnings
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

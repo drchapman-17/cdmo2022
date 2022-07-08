@@ -146,18 +146,15 @@ def existsOverlap(x1,y1,w1,h1,res):
         if isOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2]): return True
     return False
 
-def computeMostStupidSolution(instance,**kwargs):
+def computeMostStupidSolution(instance,rotationsAllowed=False):
     n=instance['n']
     W=instance['w']
     dim=instance['dim']
-    rotations=False
-    if "rotationsAllowed" in kwargs.keys():
-        rotations=kwargs["rotationsAllowed"]
     for el in dim:
         if el[0]>W and el[1]>W:
             return None
         elif el[0]>W:
-            if rotations: el[0],el[1]=el[1],el[0]
+            if rotationsAllowed: el[0],el[1]=el[1],el[0]
             else: return None
     # dim=sorted(dim, key=lambda b:(b[1],b[0]) ,reverse=True) #OLD VERSION 
     a=sorted(enumerate(dim), key=lambda b:(b[1],b[0]) ,reverse=True)
