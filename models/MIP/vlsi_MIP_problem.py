@@ -1,4 +1,6 @@
 from ctypes import util
+import enum
+from operator import indexOf
 from pulp import *
 import numpy as np
 import inspect
@@ -88,6 +90,8 @@ class VLSI_Problem():
             if rotationsAllowed:
                 if p[i]==q[i]: # Block is a square, avoid flipping
                     F[i]=0
+                    W[i]=p[i]
+                    H[i]=q[i]
             if i<j:
                 if p[i]==p[j] and q[i]==p[j]: # Blocks have equal size, arbitrarily fix one to be in the low/left position   
                     R[i][j]=1 
@@ -114,6 +118,7 @@ class VLSI_Problem():
                 if i<j:
                     problem += R[i][j]+R[j][i]+U[i][j]+U[j][i]<=3, f"B_{i}_{j}_at_most_one_rel"                    
 
+        
         self.problem=problem
 
     def __setInitialValues__(self,sol):
@@ -154,10 +159,59 @@ class VLSI_Problem():
                         U[i][j].setInitialValue(0)
                         U[j][i].setInitialValue(1)
 
+    def __setPriorities__(self):
+        solverModel=self.problem.solverModel
+        if not self.rotationsAllowed:
+            dim=[(d[0],d[1]) for d in self.instance['dim']]
+        else: 
+            dim=[(min(d[0],d[1]),max(d[0],d[1])) for d in self.instance['dim']]
+
+        varsDict={var.VarName:var for var in solverModel.getVars()}
+        # a=sorted(set(dim), key=lambda b:(b[1],b[0])) # Sort by height then width if not rotations, else by longer then shorted side
+        # a=sorted(set(dim), key=lambda b:(b[1])) # Sort by height/longer side
+        a=sorted(set(dim), key=lambda b:(b[0])) # Sort by width/shorter side
+        # a=sorted(set(dim), key=lambda b:(b[1]*b[0])) # Sort by area
+        
+        # priority=[d[0] for d in dim]
+        # varsDict[f"H_c"].setAttr("branchpriority",max(priority)+1)
+        # for i in range(self.instance['n']):
+        #     varsDict[f"Xl_{i}"].setAttr("branchpriority",priority[i])
+        #     varsDict[f"Yb_{i}"].setAttr("branchpriority",priority[i])
+        #     if self.rotationsAllowed:
+        #         if f"W_{i}" in varsDict.keys():
+        #             varsDict[f"W_{i}"].setAttr("branchpriority",priority[i])
+        #             varsDict[f"H_{i}"].setAttr("branchpriority",priority[i])
+        #             varsDict[f"F_{i}"].setAttr("branchpriority",priority[i])
+        #     for j in range(self.instance['n']):
+        #         if i!=j:
+        #             if f"R_{i}_{j}" in varsDict.keys():
+        #                 varsDict[f"R_{i}_{j}"].setAttr("branchpriority",min(priority[i],priority[j])+1)
+        #             if f"U_{i}_{j}" in varsDict.keys():
+        #                 varsDict[f"U_{i}_{j}"].setAttr("branchpriority",min(priority[i],priority[j])+1)
+
+        varsDict[f"H_c"].setAttr("branchpriority",2*len(a)+1)
+        for i in range(self.instance['n']):
+            pi=2*indexOf(a,dim[i])    
+            print(pi,dim[i],a[int(pi/2)])                    
+            varsDict[f"Xl_{i}"].setAttr("branchpriority",pi)
+            varsDict[f"Yb_{i}"].setAttr("branchpriority",pi)
+            if self.rotationsAllowed:
+                if f"W_{i}" in varsDict.keys():
+                    varsDict[f"W_{i}"].setAttr("branchpriority",pi)
+                    varsDict[f"H_{i}"].setAttr("branchpriority",pi)
+                    varsDict[f"F_{i}"].setAttr("branchpriority",pi)
+            for j in range(self.instance['n']):
+                if i!=j:
+                    pj=2*indexOf(a,dim[j])
+                    if f"R_{i}_{j}" in varsDict.keys():
+                        varsDict[f"R_{i}_{j}"].setAttr("branchpriority",min(pi,pj)+1)
+                    if f"U_{i}_{j}" in varsDict.keys():
+                        varsDict[f"U_{i}_{j}"].setAttr("branchpriority",min(pi,pj)+1)
+
     def solve(self,timeLimit=None,verbose=False,ws=False):
-        # BUILD SOLVER
         solver = getSolver('GUROBI', timeLimit=timeLimit,msg=verbose,gapRel=0,ws=ws)
         solver.buildSolverModel(self.problem)
+        self.__setPriorities__()
         solver.callSolver(self.problem)
         solver.findSolutionValues(self.problem)
         
@@ -171,16 +225,15 @@ class VLSI_Problem():
         return self.problem.solverModel.status
 
     def getSolution(self):
-        solver_model=self.problem.solverModel
-        if solver_model.SolCount > 0:
-            vn=[var.VarName for var in solver_model.getVars()]
-            vv=[var.X for var in solver_model.getVars()]
-
+        solverModel=self.problem.solverModel
+        if solverModel.SolCount > 0:
+            vn=[var.VarName for var in solverModel.getVars()]
+            vv=[var.X for var in solverModel.getVars()]
             solution=[[self.instance["w"],int(vv[vn.index("H_c")])]]
             for i in range(self.instance["n"]):
-                if self.rotationsAllowed:
-                    w=int(vv[vn.index(f"W_{i}")])
-                    h=int(vv[vn.index(f"H_{i}")])
+                if self.rotationsAllowed and f"W_{i}" in vn:
+                        w=int(vv[vn.index(f"W_{i}")])
+                        h=int(vv[vn.index(f"H_{i}")])
                 else: 
                     w=self.instance['dim'][i][0]
                     h=self.instance['dim'][i][1]
@@ -190,26 +243,16 @@ class VLSI_Problem():
         else:
             return None
 
-        # CPLEX
-        # WC=self.variables['WC']
-        # HC=self.variables['HC'].value()
-        # X=[int(x.value()) for x in self.variables['X']]
-        # Y=[int(y.value()) for y in self.variables['Y']]
-        # if self.rotationsAllowed:
-        #     W=[int(w.value()) for w in self.variables['W']]
-        #     H=[int(h.value()) for h in self.variables['H']]
-        # else:
-        #     W=[w[0] for w in self.instance['dim']]
-        #     H=[h[1] for h in self.instance['dim']]
-        # solution=[[WC,HC]]+[[W[i],H[i],X[i]+1,Y[i]+1] for i in range(self.instance['n'])]
-
-""""""
 # DEBUG
-instance=utils.loadInstance("instances/ins-35.txt")
-stupid=utils.computeMostStupidSolution(instance,True)
-model=VLSI_Problem(instance,False)
-model.solve(timeLimit=300,verbose=True,ws=True)
-sol=model.getSolution()
-print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
-if sol:
-    utils.display_solution(sol)
+if __name__=="__main__":
+    if len(sys.argv)>1:
+        instance=utils.loadInstance(f"instances/ins-{sys.argv[1]}.txt")
+    else:
+        instance=utils.loadInstance("instances/ins-35.txt")
+    stupid=utils.computeMostStupidSolution(instance,True)
+    model=VLSI_Problem(instance,False)
+    model.solve(timeLimit=300,verbose=True,ws=True)
+    sol=model.getSolution()
+    print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
+    if sol:
+        utils.display_solution(sol)
