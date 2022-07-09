@@ -150,7 +150,6 @@ def buildModelRotations(instance, o):
 
 
 def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
-    init = time()
 
     naiive = utils.computeMostStupidSolution(instance)
     if not naiive:
@@ -164,6 +163,9 @@ def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
     best_o=o=UB
 
     build=buildModelRotations if rotationsAllowed else buildModel 
+
+    init = time()
+    
     if verbose:
         print("BISECTION STARTING VALUES:")
         print('lb', LB)

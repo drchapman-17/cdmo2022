@@ -61,7 +61,7 @@ def no_overlap2(Xs, Ys, Ws, Hs, W, H, n):
                     Ys[i] - Hs[j] >= Ys[j] - H),
                 And(
                     Xs[i] + Ws[i] <= Xs[j] + W, 
-                    Xs[i] - Ws[j] >= Xs[j], 
+                    Xs[i] - Ws[j] >= Xs[j],  
                     Ys[i] + Hs[i] <= Ys[j] + 2*H, 
                     Ys[i] - Hs[j] >= Ys[j] - H),
                 And(
