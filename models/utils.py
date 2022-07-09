@@ -156,8 +156,7 @@ def computeMostStupidSolution(instance,rotationsAllowed=False):
         elif el[0]>W:
             if rotationsAllowed: el[0],el[1]=el[1],el[0]
             else: return None
-    # dim=sorted(dim, key=lambda b:(b[1],b[0]) ,reverse=True) #OLD VERSION 
-    a=sorted(enumerate(dim), key=lambda b:(b[1],b[0]) ,reverse=True)
+    a=sorted(enumerate(dim), key=lambda b:(b[1][1],b[1][0]) ,reverse=True)
     dim=[i[1] for i in a]
     idx=[i[0] for i in a]
     p=[d[0] for d in dim]
