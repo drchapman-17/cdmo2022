@@ -126,7 +126,7 @@ def solveInstance(instance,options):
     while (lb < ub):
         s = Solver()
         print(f"Trying H:{H}")
-        s.set("timeout", int(300-(time.time()-s_time)*1000))
+        s.set("timeout", 300000)
 
 
         '''
