@@ -2,7 +2,7 @@ from z3 import *
 
 def large_rectangles(w_i, w_j, h_i, h_j, W, H):
     if w_i + w_j <= W and h_i + h_j <= H:
-        return ""
+        return False
     elif w_i + w_j > W and h_i + h_j <= H:
         return "W"
     elif w_i + w_j <= W and h_i + h_j > H:
@@ -19,71 +19,74 @@ def largest_rectangle(idx, max_idx):
         return True
     else:
         return False
-
-def getCoords(m, x, y, W, H, n):
-    x_sol = []
-    y_sol = [] 
     
-    for i in range(n):
-        j = 0
-        while j < W:
-            if m.evaluate(x[i][j]):
-                x_sol.append(j)
-                break
-            j += 1
-
-        j = 0
-        while j < H:
-            if m.evaluate(y[i][j]):
-                y_sol.append(j)
-                break
-            j += 1
-
-    return [x_sol, y_sol]
-
-def no_overlap(W, H, widths, heights, i, j, fi, fj, px, py, lr, ud):    
-    dim1i,dim2i=(widths[i],heights[i]) if not fi else (heights[i],widths[i])
-    dim1j,dim2j=(widths[j],heights[j]) if not fj else (heights[j],widths[j])
+def no_overlap(W, H, widths, heights, i, j, flip, px, py, lr, ud):            
+    dim1,dim2=(widths[i],heights[i]) if not flip else (heights[i],widths[i])
     cts=[]
     
     if lr:
         # lr(r_i,r_j)-> x_j > w_i
         cts.append(Or(
                 Not(lr[i][j]),
-                Not(px[j][dim1i-1]),
+                Not(px[j][dim1-1]),
             )) 
 
-        for e in range(0,W-dim1i):
+        for e in range(0,W-dim1):
             cts.append(Or(
                 Not(lr[i][j]),
-                px[i][e],
-                Not(px[j][e+dim1i]),
+                Not(px[j][e+dim1]),
+                px[i][e]
             ))
 
     if ud:
         # ud(r_i,r_j)-> y_j > h_i
         cts.append(Or(
                 Not(ud[i][j]),
-                Not(py[j][dim2i-1])
+                Not(py[j][dim2-1])
             ))
 
-        for f in range(0,H-dim2i):
+        for f in range(0,H-dim2):
             cts.append(Or(
                 Not(ud[i][j]),
-                py[i][f],
-                Not(py[j][f+dim2i])
+                Not(py[j][f+dim2]),
+                py[i][f]
             ))
 
     return cts
 
-def getNewDims(model,widths,heights,f):
+def getCoords(vars_dict, W, H, n, widths, heights, rot = False):
+    x_sol = []
+    y_sol = [] 
     w=[]
     h=[]
-    for i in range(len(widths)):
-        if model.evaluate(f[i]):
-            w.append(heights[i])
-            h.append(widths[i])
-        else:
-            w.append(widths[i])
-            h.append(heights[i])
-    return w,h 
+                
+    for i in range(n):
+        if rot:
+            if vars_dict[f"f{i+1}"]:  
+                w.append(heights[i])
+                h.append(widths[i])
+            else:
+                w.append(widths[i])
+                h.append(heights[i])
+                
+        x = 0
+        while x < W:
+            try:
+                if vars_dict[f"px{i+1}_{x}"]:                
+                    x_sol.append(x)
+                    break
+            except:
+                pass
+            x += 1
+        y = 0
+        
+        while y < H:
+            try:
+                if vars_dict[f"py{i+1}_{y}"]:                
+                    y_sol.append(y)
+                    break
+            except:
+                pass
+            y += 1
+        
+    return x_sol, y_sol, w, h

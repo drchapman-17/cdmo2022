@@ -2,7 +2,8 @@ import getopt,sys,os,inspect
 import utils
 import SMT.vlsi_SMT as SMT
 import MIP.vlsi_MIP as LP
-import CP.vlsi_CP as CP
+#import CP.vlsi_CP as CP
+import SAT.vlsi_SAT as SAT
 import warnings
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 warnings.filterwarnings("error")
@@ -79,6 +80,8 @@ def main():
 
     # Print useful informations
     print("Solving instance: {}".format(instn))
+    for key,val in instance.items():
+        print(f"{key} = {val}")
     print(f"Solving strategy: {model}")
     print("Rotations: "+("allowed" if rotationsAllowed else "not allowed"))
     print("Timeout: {}".format(f"{timeout}s" if timeout else "not set"))
@@ -113,7 +116,7 @@ def runCPInstance(instance,options):
     CP.solveInstance(instance,options)
 
 def runSATInstance(instance,options):
-    pass
+    SAT.solveInstance(instance,options)
 
 def runSMTInstance(instance,options):
     SMT.solveInstance(instance,options)

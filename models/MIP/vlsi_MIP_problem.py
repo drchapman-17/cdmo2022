@@ -205,11 +205,11 @@ class VLSI_Problem():
 
 """"""
 # DEBUG
-instance=utils.loadInstance("instances/ins-35.txt")
-stupid=utils.computeMostStupidSolution(instance,True)
-model=VLSI_Problem(instance,False)
-model.solve(timeLimit=300,verbose=True,ws=True)
-sol=model.getSolution()
-print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
-if sol:
-    utils.display_solution(sol)
+# instance=utils.loadInstance("instances/ins-35.txt")
+# stupid=utils.computeMostStupidSolution(instance,True)
+# model=VLSI_Problem(instance,False)
+# model.solve(timeLimit=300,verbose=True,ws=True)
+# sol=model.getSolution()
+# print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
+# if sol:
+#     utils.display_solution(sol)
