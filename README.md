@@ -50,7 +50,6 @@
 This work consists in a Combinatorial Optimization approach to the Very Large Scale Integration (VLSI) problem. In particular, four different technologies are employed to address the problem
 at hand, namely Constraint Programming (CP), propositional SATisfiability (SAT), Satisfiability Modulo Theories (SMT) and Linear Programming (LP).
 
-<p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ### Usage
@@ -64,15 +63,10 @@ at hand, namely Constraint Programming (CP), propositional SATisfiability (SAT),
     python runModel.py [-i instn] [-t timeout] [-v verbose] [-o outfile] [-r rotations] <strategy>
    ```
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. 
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 
 
 <!-- CONTACT -->
