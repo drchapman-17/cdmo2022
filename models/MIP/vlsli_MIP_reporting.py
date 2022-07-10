@@ -13,10 +13,9 @@ sys.path.insert(0, parentdir)
 sys.path.insert(0, currentdir) 
 import utils
 
-report=currentdir+"/report_gurobi_priority.csv"    
+report=currentdir+"/report_gurobi_priority_rot.csv"    
 outfile=open(report, 'w')
 outfile.write("Instance;Time;Solution\n")
-ws=False # Warm Start
 
 for instn in range(1,41):    
     print("SOLVING: ", instn)

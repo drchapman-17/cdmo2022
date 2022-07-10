@@ -161,55 +161,25 @@ class VLSI_Problem():
 
     def __setPriorities__(self):
         solverModel=self.problem.solverModel
-        if not self.rotationsAllowed:
-            dim=[(d[0],d[1]) for d in self.instance['dim']]
-        else: 
-            dim=[(min(d[0],d[1]),max(d[0],d[1])) for d in self.instance['dim']]
-
-        varsDict={var.VarName:var for var in solverModel.getVars()}
-        # a=sorted(set(dim), key=lambda b:(b[1],b[0])) # Sort by height then width if not rotations, else by longer then shorted side
-        # a=sorted(set(dim), key=lambda b:(b[1])) # Sort by height/longer side
-        a=sorted(set(dim), key=lambda b:(b[0])) # Sort by width/shorter side
-        # a=sorted(set(dim), key=lambda b:(b[1]*b[0])) # Sort by area
-        
-        # priority=[d[0] for d in dim]
-        # varsDict[f"H_c"].setAttr("branchpriority",max(priority)+1)
-        # for i in range(self.instance['n']):
-        #     varsDict[f"Xl_{i}"].setAttr("branchpriority",priority[i])
-        #     varsDict[f"Yb_{i}"].setAttr("branchpriority",priority[i])
-        #     if self.rotationsAllowed:
-        #         if f"W_{i}" in varsDict.keys():
-        #             varsDict[f"W_{i}"].setAttr("branchpriority",priority[i])
-        #             varsDict[f"H_{i}"].setAttr("branchpriority",priority[i])
-        #             varsDict[f"F_{i}"].setAttr("branchpriority",priority[i])
-        #     for j in range(self.instance['n']):
-        #         if i!=j:
-        #             if f"R_{i}_{j}" in varsDict.keys():
-        #                 varsDict[f"R_{i}_{j}"].setAttr("branchpriority",min(priority[i],priority[j])+1)
-        #             if f"U_{i}_{j}" in varsDict.keys():
-        #                 varsDict[f"U_{i}_{j}"].setAttr("branchpriority",min(priority[i],priority[j])+1)
-
-        varsDict[f"H_c"].setAttr("branchpriority",2*len(a)+1)
+        varsDict={var.VarName:var for var in solverModel.getVars()}        
+        priority=[d[1]*d[0] for d in self.instance['dim']]
+        varsDict[f"H_c"].setAttr("branchpriority",max(priority)+1)
         for i in range(self.instance['n']):
-            pi=2*indexOf(a,dim[i])    
-            print(pi,dim[i],a[int(pi/2)])                    
-            varsDict[f"Xl_{i}"].setAttr("branchpriority",pi)
-            varsDict[f"Yb_{i}"].setAttr("branchpriority",pi)
-            if self.rotationsAllowed:
-                if f"W_{i}" in varsDict.keys():
-                    varsDict[f"W_{i}"].setAttr("branchpriority",pi)
-                    varsDict[f"H_{i}"].setAttr("branchpriority",pi)
-                    varsDict[f"F_{i}"].setAttr("branchpriority",pi)
+            varsDict[f"Xl_{i}"].setAttr("branchpriority",priority[i])
+            varsDict[f"Yb_{i}"].setAttr("branchpriority",priority[i])
+            if self.rotationsAllowed and f"W_{i}" in varsDict.keys():
+                    varsDict[f"W_{i}"].setAttr("branchpriority",priority[i])
+                    varsDict[f"H_{i}"].setAttr("branchpriority",priority[i])
+                    varsDict[f"F_{i}"].setAttr("branchpriority",priority[i])
             for j in range(self.instance['n']):
                 if i!=j:
-                    pj=2*indexOf(a,dim[j])
                     if f"R_{i}_{j}" in varsDict.keys():
-                        varsDict[f"R_{i}_{j}"].setAttr("branchpriority",min(pi,pj)+1)
+                        varsDict[f"R_{i}_{j}"].setAttr("branchpriority",min(priority[i],priority[j])+1)
                     if f"U_{i}_{j}" in varsDict.keys():
-                        varsDict[f"U_{i}_{j}"].setAttr("branchpriority",min(pi,pj)+1)
+                        varsDict[f"U_{i}_{j}"].setAttr("branchpriority",min(priority[i],priority[j])+1)
 
     def solve(self,timeLimit=None,verbose=False,ws=False):
-        solver = getSolver('GUROBI', timeLimit=timeLimit,msg=verbose,gapRel=0,ws=ws)
+        solver = getSolver('GUROBI', timeLimit=timeLimit,msg=verbose,gapRel=0,warmStart=ws)
         solver.buildSolverModel(self.problem)
         self.__setPriorities__()
         solver.callSolver(self.problem)
@@ -254,5 +224,5 @@ if __name__=="__main__":
     model.solve(timeLimit=300,verbose=True,ws=True)
     sol=model.getSolution()
     print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
-    if sol:
-        utils.display_solution(sol)
+    # if sol:
+    #     utils.display_solution(sol)
