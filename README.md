@@ -43,9 +43,8 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-
   <p align="center">
-    <img src="images/plate_Example.png" alt="Logo">
+    <img src="images/plate_example.png" alt="Plate">
   </p>
 
 This work consists in a Combinatorial Optimization approach to the Very Large Scale Integration (VLSI) problem. In particular, four different technologies are employed to address the problem
