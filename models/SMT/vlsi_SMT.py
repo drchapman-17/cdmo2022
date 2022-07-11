@@ -165,7 +165,7 @@ def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
     build=buildModelRotations if rotationsAllowed else buildModel 
 
     init = time()
-    
+
     if verbose:
         print("BISECTION STARTING VALUES:")
         print('lb', LB)
@@ -226,8 +226,8 @@ def solveInstance(instance, options):
 
 def main():
     # Report
-    rotationsAllowed=False
-    filename=currentdir+"/report.csv"
+    rotationsAllowed=True
+    filename=currentdir+"/report_rotations.csv"
 
     with open(filename, 'w') as outfile:
         outfile.write("Instance;Time;Solution\n")

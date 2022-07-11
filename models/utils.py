@@ -90,7 +90,7 @@ def display_solution(sol,**kwargs):
             rx, ry = rect.get_xy()
             cx = rx + rect.get_width()/2.0
             cy = ry + rect.get_height()/2.0
-            ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
+            #ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
             ratio = 1.0
     x_left, x_right = ax.get_xlim()
     y_low, y_high = ax.get_ylim()
@@ -104,7 +104,9 @@ def display_solution(sol,**kwargs):
     #ax.set_yticks(range(H + 1))
     #ax.set_yticklabels([])
     #ax.set_xticklabels([])
-    plt.show()
+    
+    plt.savefig("plot.png", edgecolor='w', facecolor = 'w')
+    #plt.show()
 
 
 def isFeasible(sol): 

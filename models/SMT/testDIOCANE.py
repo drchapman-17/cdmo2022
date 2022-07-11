@@ -229,13 +229,27 @@ def solveInstance(instance, options):
 def main():
     # Report
     rotationsAllowed=False
-    instance = utils.loadInstance(currentdir+f"/../instances/ins-{sys.argv[1]}.txt")
-    print(instance)
-    o, m, t = bisection(instance,rotationsAllowed,300,True)
-    sol = format_solution(m, o, instance['dim'], instance['n'], instance['w'],rotationsAllowed)
-    print(sol)
-    print("Time:",t)
-    utils.display_solution(sol)
+    filename=currentdir+"/report2.csv"
+
+    with open(filename, 'w') as outfile:
+        outfile.write("Instance;Time;Solution\n")
+    for i in range(1,41):
+        print("SOLVING: ", i)
+        instance = utils.loadInstance(currentdir+f"/../instances/ins-{i}.txt")
+
+        print(instance)
+        o, m, t = bisection(instance,rotationsAllowed,300)
+
+        m = format_solution(m, o, instance['dim'], instance['n'], instance['w'],rotationsAllowed)
+        print(m)
+
+        if(t<300):
+            with open(filename, 'a') as outfile:
+                outfile.write("{};{};{}\n".format(i,t,m))
+        else:
+            with open(filename, 'a') as outfile:
+                outfile.write("{};{};{}\n".format(i,None,m))
+        print("Finished in:", t)
     
 if __name__=="__main__":
     main()
