@@ -9,9 +9,9 @@
 <!-- PROJECT LOGO -->
 <br />
 <div>
-  <h1 align="center">VLSI Design</h1>
+  <h1>VLSI Design</h1>
 
-  <p align="center">
+  <p>
     <h3> Project Work Combinatorial Decision Making and Optimization 2021/2022 </h2>
       Zeynep Kiziltan 
     <br />
