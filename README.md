@@ -8,7 +8,7 @@
 
 <!-- PROJECT LOGO -->
 <br />
-<div align="center">
+<div>
   <h1 align="center">VLSI Design</h1>
 
   <p align="center">
