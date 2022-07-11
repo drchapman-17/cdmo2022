@@ -10,12 +10,12 @@
 <br />
 <div>
   <h1>VLSI Design</h1>
-
   <p>
     <h3> Project Work Combinatorial Decision Making and Optimization 2021/2022 </h2>
-      Zeynep Kiziltan 
-    <br />
-      Roberto Amadini 
+      
+      Professors:
+      - Zeynep Kiziltan 
+      - Roberto Amadini 
     <br />
   </p>
 </div>
