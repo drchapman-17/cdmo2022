@@ -2,7 +2,7 @@ import getopt,sys,os,inspect
 import utils
 import SMT.vlsi_SMT as SMT
 import MIP.vlsi_MIP as LP
-#import CP.vlsi_CP as CP
+import CP.vlsi_CP as CP
 import SAT.vlsi_SAT as SAT
 import warnings
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -71,8 +71,8 @@ def main():
         sys.exit(2)
 
     model=args[0].upper()
-    if model not in ["CP","SAT","SMT","ILP"]:
-        print("Error: solving strategy \"{}\" not recognized. Allowed names are \"CP\",\"SAT\"\"SMT\"\"ILP\"".format(model))
+    if model not in ["CP","SAT","SMT","MIP"]:
+        print("Error: solving strategy \"{}\" not recognized. Allowed names are \"CP\",\"SAT\"\"SMT\"\"MIP\"".format(model))
         sys.exit(2)
 
     #load problem instance
@@ -102,7 +102,7 @@ def main():
         "CP":runCPInstance,
         "SAT":runSATInstance,
         "SMT":runSMTInstance,
-        "ILP":runILPInstance
+        "MIP":runILPInstance
     }
     
     # Run the solver

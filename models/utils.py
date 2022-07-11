@@ -47,8 +47,7 @@ def displaySolution(sol,**kwargs):
     plt.xticks([])
     plt.yticks([])
 
-    plt.savefig("plot.png", edgecolor='w', facecolor = 'w')
-
+    plt.show()
 
 def isFeasible(sol): 
     w=sol[0][0]

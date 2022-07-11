@@ -16,7 +16,6 @@ class VLSI_Problem():
         self.instance=instance
         self.rotationsAllowed=rotationsAllowed
         #PARAMETERS
-        M=1000
         WC=instance["w"]
         n=instance["n"]
         dim=instance['dim']
@@ -29,6 +28,7 @@ class VLSI_Problem():
             raise Exception("Feasibility check failed: No solution can exist to the problem. The object can not be built.")
         Hmin = tot_area/WC
         Hmax=stupidSol[0][1]
+        M=2*max(Hmax,WC)
         # DECISION VARIABLES
         W=[] # Width of block
         H=[] # Height of block
@@ -101,8 +101,8 @@ class VLSI_Problem():
         problem=LpProblem("VLSI_Problem", LpMinimize)
 
         problem += HC, "Chip_Height"
-        problem += 2*Xl[largest_idx]<=WC-p[largest_idx], "Largest_rectangle_Xpos"
-        problem += 2*Yb[largest_idx]<=HC-q[largest_idx], "Largest_rectangle_Ypos"
+        problem += 2*Xl[largest_idx]<=WC-W[largest_idx], "Largest_rectangle_Xpos"
+        problem += 2*Yb[largest_idx]<=HC-H[largest_idx], "Largest_rectangle_Ypos"
         for i in range(n):
             problem += W[i]==(1-F[i])*p[i] + F[i]*q[i], f"B_{i}_width"
             problem += H[i]==F[i]*p[i] + (1-F[i])*q[i], f"B_{i}_height"
