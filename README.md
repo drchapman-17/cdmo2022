@@ -9,10 +9,6 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/drchapman-17/cdmo2022">
-    <img src="images/logo.png" alt="Logo" width="300" height="300">
-  </a>
-
   <h2 align="center">VLSI Design</h3>
 
   <p align="center">
