@@ -9,7 +9,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h2 align="center">VLSI Design</h3>
+  <h1 align="center">VLSI Design</h1>
 
   <p align="center">
     <h3> Project Work Combinatorial Decision Making and Optimization 2021/2022 </h2>
@@ -40,8 +40,7 @@
 ## About The Project
 
   <p align="center">
-    <img src="images/instance_30.png" alt="Plate", width=500>
-    <img src="images/out-30.png" alt="Plate", width=450>
+    <img src="images/intro_img.png" alt="Plate", width=500>
   </p>
 
 This work consists in a Combinatorial Optimization approach to the Very Large Scale Integration (VLSI) problem. In particular, four different technologies are employed to address the problem
