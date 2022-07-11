@@ -31,7 +31,7 @@ def solveInstance(instance,options):
     
     sol, e_time = problem.solve(timeLimit=timeout,verbose=verbose)  
     
-    if sol == None and e_time <= timeout:
+    if sol is None and e_time <= timeout:
         print(">Unfeasible.")
     elif e_time > timeout:
         
@@ -45,7 +45,7 @@ def solveInstance(instance,options):
             print(f">Out of time, {round(e_time,3)} s, best height: {sol[0][1]}")
         else:
             print(f">Out of time, {round(e_time,3)} s")
-    else:
+    elif sol is not None:
         if(show):
             utils.display_solution(sol)
         if(output):

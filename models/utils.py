@@ -88,9 +88,15 @@ def display_solution(sol,**kwargs):
             rect = plt.Rectangle([pos_circuits[i][0]-1,pos_circuits[i][1]-1], *sizes_circuits[i], edgecolor="#333", facecolor=cmap(i))
             ax.add_patch(rect)
             rx, ry = rect.get_xy()
+<<<<<<< HEAD
             cx = rx + rect.get_width()/2.0
             cy = ry + rect.get_height()/2.0
             #ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
+=======
+            # cx = rx + rect.get_width()/2.0
+            # cy = ry + rect.get_height()/2.0
+            # ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
+>>>>>>> c8896200f40eac1ef8c79679be2230031674e82f
             ratio = 1.0
     x_left, x_right = ax.get_xlim()
     y_low, y_high = ax.get_ylim()
@@ -247,6 +253,47 @@ def report_barplot(model, save_image = True):
     plt.ylabel('Execution time', size = 15)
     plt.title(model+' execution time', size = 20)
     plt.legend(loc = 'upper left', fontsize='x-large')
+
+    if save_image:
+        plt.savefig(name_image, edgecolor='w', facecolor = 'w')
+
+    plt.show()
+
+def report_barplot_v2(model, save_image = True):
+    # model must be a string between: CP, SAT, SMT, MIP
+    # the csv must be have as columns: Instance, Time, Solution
+    # The instances that can't be resolved in time must have in 'Time' None
+    # The name of the csv must be i.e. report_CP.csv, report_rotation_CP.csv
+
+    csv_no_rotation = 'report_'+model+'.csv'
+    csv_rotation = 'report_rotation_'+model+'.csv'
+    name_image = 'report_'+model+'.png'
+
+    df = pd.read_csv(csv_no_rotation, sep=';')
+    df_flip = pd.read_csv(csv_rotation, sep=';')
+
+    df['mode'] = 'No rotation'
+    df_flip['mode'] = 'Rotation'
+
+    df.loc[df['Time'] > 300, 'mode']= 'Failure no rotation'
+    df_flip.loc[df_flip['Time'] > 300, 'mode']= 'Failure rotation'
+
+    df = pd.concat([df, df_flip])
+
+    sns.set_palette(sns.color_palette("tab10"))
+    plt.figure(figsize = (15,10))
+    sns.barplot(data = df, x = 'Instance', y = 'Time', hue = 'mode', hue_order=['No rotation', 'Failure no rotation'\
+                                                                                ,'Rotation', 'Failure rotation'])
+
+    plt.xticks(fontsize = 'large')
+    plt.yticks(fontsize = 'large')
+    plt.xlabel('Instance', size = 15)
+    plt.ylabel('Execution time', size = 15)
+    plt.title('SAT execution time', size = 20)
+    plt.legend(loc = 'upper left', fontsize='x-large')
+
+    threshold = 300
+    plt.axhline(threshold, color='red', ls='dotted')
 
     if save_image:
         plt.savefig(name_image, edgecolor='w', facecolor = 'w')
