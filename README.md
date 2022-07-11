@@ -51,6 +51,8 @@ at hand, namely Constraint Programming (CP), propositional SATisfiability (SAT),
 
 1. Use _requirements.txt_ to create a pip virtual environment:
    ```sh
+   python -m venv cdmo
+   ./cdmo/Scripts/activate
    pip install -r requirements.txt
    ```
 2. Run _runModel.py_ as follows. Strategy must be either CP, SAT, SMT or MIP.
