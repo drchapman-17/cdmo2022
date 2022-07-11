@@ -28,6 +28,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
     </li>
+    <li><a href="#requirements">Usage</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#contacts">Contacts</a></li>
   </ol>
@@ -45,10 +46,13 @@
 This work consists in a Combinatorial Optimization approach to the Very Large Scale Integration (VLSI) problem. In particular, four different technologies are employed to address the problem
 at hand, namely Constraint Programming (CP), propositional SATisfiability (SAT), Satisfiability Modulo Theories (SMT) and Linear Programming (LP).
 
+<!-- USAGE EXAMPLES -->
 ### Requirements 
 - Python v. 3.6.x or later
 - Minizinc v. 2.6.1 or later (https://www.minizinc.org/software.html)
 - Gurobi Optimizer (https://www.gurobi.com/downloads/gurobi-optimizer-eula/) can ask for a free academic license
+
+Minizinc must be added to the $PATH environment variable in order to work well with the Python interface.
 
 <!-- USAGE EXAMPLES -->
 ### Usage
