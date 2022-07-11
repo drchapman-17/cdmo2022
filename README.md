@@ -13,10 +13,9 @@
   <p>
     <h3> Project Work Combinatorial Decision Making and Optimization 2021/2022 </h2>
       
-      Professors:
-      - Zeynep Kiziltan 
-      - Roberto Amadini 
-    <br />
+  Professors:
+  - Zeynep Kiziltan 
+  - Roberto Amadini 
   </p>
 </div>
 
