@@ -149,7 +149,7 @@ def buildModelRotations(instance, o):
     return s
 
 
-def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
+def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False, export=None):
 
     naiive = utils.computeNaiveSolution(instance)
     if not naiive:
@@ -181,7 +181,10 @@ def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
         if(s.check() == sat):
             UB = o
             best_o=o
-            m = s.model()        
+            if export:
+                sexpr = s.sexpr()
+            m = s.model()    
+                
             if verbose:
                 print("sat, UB:", UB)
         elif(s.check()==unknown):
@@ -196,18 +199,22 @@ def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
             print("o:", o)
             print("-----------------------")
 
+    if export:
+        with open(export,'w') as outputfile:
+                outputfile.write(sexpr)
     return best_o, m, time()-init
 
 
 def solveInstance(instance, options):
     # Solve the instance
+    export=options['export']
     verbose=options['verbose']
     output=options['output']
     show=options['show']
     timeout=options['timeout']
     rotationsAllowed=options["rotationsAllowed"]
 
-    o, m, t = bisection(instance,rotationsAllowed,timeout,verbose)
+    o, m, t = bisection(instance,rotationsAllowed,timeout,verbose, export)
     if timeout and t>timeout:  print("Time limit reached")
     if m:
         sol=format_solution(m, o, instance['dim'], instance['n'], instance['w'],rotationsAllowed)
@@ -250,4 +257,7 @@ def main():
         print("Finished in:", t)
 
 if __name__=="__main__":
+    # Test Export SMT2 file
+    # solveInstance(utils.loadInstance(currentdir+f"/../instances/ins-1.txt"),{'verbose':False,'output':None,'show':False,'timeout':300, 'export':'Ciao.smt2', 'rotationsAllowed':False})
     main()
+    
