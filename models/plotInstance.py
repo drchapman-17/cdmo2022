@@ -6,7 +6,7 @@ sys.path.insert(0, parentdir)
 sys.path.insert(0, currentdir) 
 import utils
 
-instn=11
+instn=30
 instance=utils.loadInstance("instances/ins-{}.txt".format(instn)) # CAMBIA IL PATH COME VUOI TU
 print(instance)
  
