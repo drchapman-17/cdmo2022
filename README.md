@@ -68,13 +68,22 @@ Distributed under the MIT License.
 ## Contact
 
 
-* Antonio Morelli - [Linkedin](https://www.linkedin.com/in/antonio-morelli-077a16220/) - [GitHub](https://github.com/antoniototimorelli) - antonio.morelli3@studio.unibo.it
+* Antonio Morelli: 
+- [Linkedin](https://www.linkedin.com/in/antonio-morelli-077a16220/) 
+- [GitHub](https://github.com/antoniototimorelli) 
+- antonio.morelli3@studio.unibo.it
 
-* Davide Baldelli - davide.baldelli4@studio.unibo.it
+* Davide Baldelli 
+- [Linkedin](linkedin.com/in/davide-baldelli-b55618203/)
+- davide.baldelli4@studio.unibo.it
 
-* Tommaso Cortecchia - tommaso.cortecchia@studio.unibo.it
+* Tommaso Cortecchia 
+- tommaso.cortecchia@studio.unibo.it
 
-* Stefano Ciapponi - stefano.ciapponi@studio.unibo.it
+* Stefano Ciapponi 
+- [Linkedin](https://www.linkedin.com/in/stefano-ciapponi-3040b9201/) 
+- [GitHub](github.com/drchapman-17) 
+- stefano.ciapponi@studio.unibo.it
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
