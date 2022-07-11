@@ -1,6 +1,3 @@
-from ctypes import util
-import enum
-from operator import indexOf
 from pulp import *
 import numpy as np
 import inspect
@@ -212,17 +209,3 @@ class VLSI_Problem():
             return solution    
         else:
             return None
-
-# DEBUG
-if __name__=="__main__":
-    if len(sys.argv)>1:
-        instance=utils.loadInstance(f"instances/ins-{sys.argv[1]}.txt")
-    else:
-        instance=utils.loadInstance("instances/ins-35.txt")
-    stupid=utils.computeNaiveSolution(instance,True)
-    model=VLSI_Problem(instance,False)
-    model.solve(timeLimit=300,verbose=True,ws=True)
-    sol=model.getSolution()
-    print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
-    # if sol:
-    #     utils.displaySolution(sol)

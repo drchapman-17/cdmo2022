@@ -40,7 +40,7 @@ def solveInstance(instance,options):
             utils.writeSolution(output,solution)
 
 def usage():
-    print("Usage: python {} [-v] [-t timeout] [-i infile] [-o outfile] [instn]".format(sys.argv[0].split("\\")[-1].split("/")[-1]))
+    print("Usage: python {} [-v] [-t timeout] [-i infile] [-o outfile] [--show] [-r] [instn]".format(sys.argv[0].split("\\")[-1].split("/")[-1]))
 
 def main():
 
