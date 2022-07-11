@@ -79,7 +79,7 @@ def main():
     instance=utils.loadInstance(input)
 
     # Print useful informations
-    print("Solving instance: {}".format(instn))
+    if instn:print("Solving instance: {}".format(instn))
     for key,val in instance.items():
         print(f"{key} = {val}")
     print(f"Solving strategy: {model}")
@@ -110,7 +110,7 @@ def main():
     run(instance,options)
 
 def usage(): 
-    print("Usage: python {} [-i instn] [-t timeout] [-v] [-o outfile] <strategy>".format(sys.argv[0]))
+    print("Usage: python {} [-h] [-r] [-intsn instn] [-i inputfile] [-o outfile] [-t timeout] [-v verbose] [--show] <strategy>".format(sys.argv[0]))
 
 def runCPInstance(instance,options):
     CP.solveInstance(instance,options)

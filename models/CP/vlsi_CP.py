@@ -1,8 +1,13 @@
 import datetime
 from minizinc import Instance,Model,Solver
 import minizinc
-import utils
+import os,sys,inspect
 import json
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+sys.path.insert(0, currentdir) 
+import utils
 
 def solveInstance(inst,options):
     verbose=False
@@ -18,9 +23,9 @@ def solveInstance(inst,options):
 
     # VERSIONE DI DAVIDE
     if rotationsAllowed:
-        vlsi = Model("./CP/vlsi_diffn_flip.mzn")
+        vlsi = Model(currentdir+"/vlsi_diffn_flip.mzn")
     else:
-        vlsi = Model("./CP/vlsi_diffn.mzn")
+        vlsi = Model(currentdir+"/vlsi_diffn.mzn")
 
     chuffed=Solver.lookup("chuffed")
     instance=Instance(chuffed,vlsi)
