@@ -65,7 +65,7 @@ Distributed under the MIT License.
 
 
 <!-- CONTACT -->
-## Contact
+## Contacts
 
 
 * Antonio Morelli: 
