@@ -16,9 +16,6 @@ def solveInstance(inst,options):
     output=options["output"]          
     rotationsAllowed=options["rotationsAllowed"]
 
-    print(inst)
-
-
     # VERSIONE DI DAVIDE
     if rotationsAllowed:
         vlsi = Model("./CP/vlsi_diffn_flip.mzn")
@@ -30,18 +27,6 @@ def solveInstance(inst,options):
     instance["n"]=inst["n"]
     instance["w"]=inst["w"]
     instance["dim"]=inst["dim"]
-    
-    # # VERSIONE DI TOTI
-    # if rotationsAllowed:
-    #     vlsi = Model("./CP/vlsi_diffn_flip_clean.mzn")
-    # else: 
-    #     vlsi = Model("./CP/vlsi_diffn_clean.mzn")
-    # chuffed=Solver.lookup("chuffed")
-    # instance=Instance(chuffed,vlsi)
-    # instance["n"]=inst["n"]
-    # instance["w"]=inst["w"]
-    # instance["w_c"]=[i[0] for i in inst["dim"]]
-    # instance["h_c"]=[i[1] for i in inst["dim"]]
 
     # SOLVE THE INSTANCE
     try:
@@ -53,7 +38,7 @@ def solveInstance(inst,options):
                 print(key,"=",val) 
             print("\n__________________")
         if show:
-            utils.display_solution(json.loads(str(result)))
+            utils.displaySolution(json.loads(str(result)))
         if output:
             utils.write_out(output,str(result))
     except minizinc.error.MiniZincWarning as e:

@@ -172,7 +172,7 @@ def bisection(instance):
     LB = int(math.ceil(sum([p[0]*p[1] for p in instance['dim']])/instance['w']))
 
     #UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
-    naiive = utils.computeMostStupidSolution(instance)
+    naiive = utils.computeNaiveSolution(instance)
     #print(heuristic)
     #UB = int(3*(LB/2))
     UB = naiive[0][1]+1

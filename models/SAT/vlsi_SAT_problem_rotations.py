@@ -23,7 +23,7 @@ class vlsi_SAT_problem_rotations():
         tot_area=sum([w*h for w,h in zip(widths,heights)])
         self.model = None
         
-        naiveSolution = utils.computeMostStupidSolution(self.instance)
+        naiveSolution = utils.computeNaiveSolution(self.instance)
         
         if not naiveSolution:
             return None

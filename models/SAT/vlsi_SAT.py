@@ -37,7 +37,7 @@ def solveInstance(instance,options):
         
         if sol is not None:
             if(show):
-                utils.display_solution(sol)
+                utils.displaySolution(sol)
 
             if(output):
                 utils.writeSolution(output,sol)
@@ -47,7 +47,7 @@ def solveInstance(instance,options):
             print(f">Out of time, {round(e_time,3)} s")
     elif sol is not None:
         if(show):
-            utils.display_solution(sol)
+            utils.displaySolution(sol)
         if(output):
             utils.writeSolution(output,sol)
         

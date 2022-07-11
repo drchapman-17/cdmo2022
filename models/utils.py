@@ -1,7 +1,4 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
 import sys 
 
 def loadInstance(path):
@@ -21,56 +18,10 @@ def loadInstance(path):
         print(e)
         sys.exit(2)
 
-def show(l,**kwargs):
-    lw=1.5
-    figsize=None
-    for key, value in kwargs.items():
-        if key=="lw": lw=kwargs["lw"]
-        elif key=="figsize": figsize=kwargs["figsize"]
-        else: assert False, f"Argument \"{key}\" not recognized"
-    fig, (ax1, ax2) = plt.subplots(2, 1,figsize=figsize)    
-    dim_img_in=(np.sum([i[0] for i in l[1:]])+2*len(l)-4, max([i[1] for i in l[1:]]))
-    img_in=np.zeros(shape=dim_img_in)
-    pos=0
-    c=0
-    for i in l[1:]:
-        c-=1
-        img_in[pos:pos+i[0], 0:i[1]]=c
-        pos+=i[0]+2
-    
-    ax1.imshow(np.transpose(img_in), cmap='terrain')
-    ax1.set_xticks(np.arange(dim_img_in[0]+1)-0.5)
-    ax1.set_xticklabels([])
-    ax1.set_yticks(np.arange(dim_img_in[1]+1)-0.5)
-    ax1.set_yticklabels([])
-    ax1.set_xlim(-0.5,dim_img_in[0]-0.5)
-    ax1.set_ylim(-0.5,dim_img_in[1]-0.5)
-    ax1.grid(color='k', linestyle='-', linewidth=lw)
-        
-    dim_img_out=[l[0][0], l[0][1]+1]
-    img_out=np.zeros(shape=dim_img_out)
-    c=0
-    
-    for i in l[1:]:
-        c-=1
-        img_out[i[2]-1:i[2]-1+i[0],i[3]-1:i[3]-1+i[1]]=c        
-
-    ax2.imshow(np.transpose(img_out), cmap='terrain')
-    ax2.set_xticks(np.arange(dim_img_out[0]+1)-0.5)#,labels=[])
-    ax2.set_xticklabels([])
-    ax2.set_yticks(np.arange(dim_img_out[1]+1)-0.5)#,labels=[])
-    ax2.set_yticklabels([])
-    ax2.set_xlim(-0.5,dim_img_out[0]-0.5)
-    ax2.set_ylim(-0.5,dim_img_out[1]-0.5)
-    ax2.grid(color='k', linestyle='-', linewidth=lw)
-    plt.show()
-
-def display_solution(sol,**kwargs):
+def displaySolution(sol,**kwargs):
     title=""
-    figsize=None
     for key, value in kwargs.items():
         if key=="title": title=kwargs["title"]
-        elif key=="figsize": figsize=kwargs["figsize"]
         else: assert False, f"Argument \"{key}\" not recognized"
 
     W=sol[0][0]
@@ -78,7 +29,7 @@ def display_solution(sol,**kwargs):
     n=len(sol[1:])
     sizes_circuits=[[s[0],s[1]] for s in sol[1:]]
     pos_circuits=[[s[2],s[3]] for s in sol[1:]]
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     cmap = plt.cm.get_cmap('Set3', n)
     #ax = plt.gca()
     plt.title(title)
@@ -87,26 +38,16 @@ def display_solution(sol,**kwargs):
         for i in range(n):
             rect = plt.Rectangle([pos_circuits[i][0]-1,pos_circuits[i][1]-1], *sizes_circuits[i], edgecolor="#333", facecolor=cmap(i))
             ax.add_patch(rect)
-            rx, ry = rect.get_xy()
-            # cx = rx + rect.get_width()/2.0
-            # cy = ry + rect.get_height()/2.0
-            # ax.annotate(i+1, (cx, cy), color='black', weight='bold', ha='center', va='center')
-            ratio = 1.0
     x_left, x_right = ax.get_xlim()
     y_low, y_high = ax.get_ylim()
-    ax.set_aspect(abs((x_right-x_left)/(y_low-y_high))*ratio)
+    ax.set_aspect(abs((x_right-x_left)/(y_low-y_high))*1.0)
     ax.set_xlim(0, W)
     ax.set_ylim(0, H)
     
     plt.xticks([])
     plt.yticks([])
-    #ax.set_xticks(range(W + 1))
-    #ax.set_yticks(range(H + 1))
-    #ax.set_yticklabels([])
-    #ax.set_xticklabels([])
-    
+
     plt.savefig("plot.png", edgecolor='w', facecolor = 'w')
-    #plt.show()
 
 
 def isFeasible(sol): 
@@ -148,7 +89,7 @@ def existsOverlap(x1,y1,w1,h1,res):
         if isOverlap([x1,y1,x1+w1,y1+h1],[x2,y2,x2+w2,y2+h2]): return True
     return False
 
-def computeMostStupidSolution(instance,rotationsAllowed=False):
+def computeNaiveSolution(instance,rotationsAllowed=False):
     n=instance['n']
     W=instance['w']
     dim=instance['dim']
@@ -212,99 +153,3 @@ def readSolution(filename):
             b = remaining_lines[i].split()
             sol.append([int(b[0]),int(b[1]),int(b[2])+1,int(b[3])+1])
     return sol 
-
-def report_barplot(model, save_image = True):
-    # model must be a string between: CP, SAT, SMT, MIP
-    # the csv must be have as columns: Instance, Time, Solution
-    # The instances that can't be resolved in time must have in 'Time' None
-    # The name of the csv must be i.e. report_CP.csv, report_rotation_CP.csv
-
-    csv_no_rotation = 'report_'+model+'.csv'
-    csv_rotation = 'report_rotation_'+model+'.csv'
-    name_image = 'report_'+model+'.png'
-
-    df = pd.read_csv(csv_no_rotation, sep=';')
-    df_flip = pd.read_csv(csv_rotation, sep=';')
-
-    df['mode'] = 'no rotation'
-    df_flip['mode'] = 'rotation'
-    df = pd.concat([df, df_flip])
-
-    T = df.loc[~df.isna().any(axis = 1), 'Time'].astype(float).max()
-
-    df.loc[df.isna().any(axis = 1), 'mode']='failure'
-    df.loc[df.isna().any(axis = 1), 'Time']=T
-    df['Time'] = df['Time'].astype(float)
-
-    colors = ['g', 'b', 'r']
-    sns.set_palette(sns.color_palette(colors))
-    plt.figure(figsize = (15,10))
-    sns.barplot(data = df, x = 'Instance', y = 'Time', hue = 'mode', orient = 'v', hue_order=['no rotation', 'rotation', 'failure'])
-
-    plt.xticks(fontsize = 'large')
-    plt.yticks(fontsize = 'large')
-    plt.xlabel('N instance', size = 15)
-    plt.ylabel('Execution time', size = 15)
-    plt.title(model+' execution time', size = 20)
-    plt.legend(loc = 'upper left', fontsize='x-large')
-
-    if save_image:
-        plt.savefig(name_image, edgecolor='w', facecolor = 'w')
-
-    plt.show()
-
-def report_barplot_v2(model, save_image = True):
-    # model must be a string between: CP, SAT, SMT, MIP
-    # the csv must be have as columns: Instance, Time, Solution
-    # The instances that can't be resolved in time must have in 'Time' None
-    # The name of the csv must be i.e. report_CP.csv, report_rotation_CP.csv
-
-    csv_no_rotation = 'report_'+model+'.csv'
-    csv_rotation = 'report_rotation_'+model+'.csv'
-    name_image = 'report_'+model+'.png'
-
-    df = pd.read_csv(csv_no_rotation, sep=';')
-    df_flip = pd.read_csv(csv_rotation, sep=';')
-
-    df['mode'] = 'No rotation'
-    df_flip['mode'] = 'Rotation'
-
-    df.loc[df['Time'] > 300, 'mode']= 'Timeout no rotation'
-    df_flip.loc[df_flip['Time'] > 300, 'mode']= 'Timeout rotation'
-
-    df = pd.concat([df, df_flip])
-
-    sns.set_palette(sns.color_palette("tab10"))
-    plt.figure(figsize = (15,10))
-    sns.barplot(data = df, x = 'Instance', y = 'Time', hue = 'mode', hue_order=['No rotation', 'Timeout no rotation'\
-                                                                                ,'Rotation', 'Timeout rotation'])
-
-    plt.xticks(fontsize = 'large')
-    plt.yticks(fontsize = 'large')
-    plt.xlabel('Instance', size = 15)
-    plt.ylabel('Execution time', size = 15)
-    plt.title('SAT execution time', size = 20)
-    plt.legend(loc = 'upper left', fontsize='x-large')
-
-    threshold = 300
-    plt.axhline(threshold, color='red', ls='dotted')
-
-    if save_image:
-        plt.savefig(name_image, edgecolor='w', facecolor = 'w')
-
-    plt.show()
-
-if __name__=="__main__":
-    # for i in range(1,41):
-    #     ins=loadInstance(f"instances/ins-{i}.txt")
-    #     ub=computeMostStupidSolution(ins)[0][1]
-    #     print(f"Ins{i}: ub={ub}")
-    i=41
-    ins=loadInstance(f"instances/ins-{i}.txt")
-    print(ins)
-    sol=computeMostStupidSolution(ins,rotationsAllowed=True)
-    if sol:
-        show(sol)
-        print("H:",sol[0][1])
-    else:
-        print("Unfeasible!")

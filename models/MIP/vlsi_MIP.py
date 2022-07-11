@@ -35,7 +35,7 @@ def solveInstance(instance,options):
     if(solution):
         print("Solution:",solution)
         if(show):
-            utils.display_solution(solution)
+            utils.displaySolution(solution)
         if(output):
             utils.writeSolution(output,solution)
 

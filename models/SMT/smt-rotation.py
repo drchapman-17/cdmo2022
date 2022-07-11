@@ -194,7 +194,7 @@ def bisection(instance):
     LB = int(sum([p[0]*p[1] for p in instance['dim']])/instance['w'])
 
     # Naiive Solution Heuristic to compute an Wpper Bound
-    naiive = utils.computeMostStupidSolution(instance)
+    naiive = utils.computeNaiveSolution(instance)
     UB = naiive[0][1]+1
 
     print(naiive)

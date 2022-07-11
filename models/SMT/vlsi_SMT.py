@@ -151,7 +151,7 @@ def buildModelRotations(instance, o):
 
 def bisection(instance,rotationsAllowed=False,timeout=None,verbose=False):
 
-    naiive = utils.computeMostStupidSolution(instance)
+    naiive = utils.computeNaiveSolution(instance)
     if not naiive:
         return None,None,None
 
@@ -221,7 +221,7 @@ def solveInstance(instance, options):
             utils.writeSolution(output,sol)
         # Plot the solution
         if show:
-            utils.display_solution(sol)
+            utils.displaySolution(sol)
     else: print("No solution found!")
 
 def main():

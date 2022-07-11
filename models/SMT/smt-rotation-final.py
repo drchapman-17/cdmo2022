@@ -128,7 +128,7 @@ def bisection(instance, verbose=False):
     LB = int(sum([p[0]*p[1] for p in instance['dim']])/instance['w'])
 
     #UB = int(2*max(max([[p[0],p[1]] for p in instance['dim']], key=lambda p:p[0]*p[1])[1],LB))+1
-    naiive = utils.computeMostStupidSolution(instance)
+    naiive = utils.computeNaiveSolution(instance)
     #print(heuristic)
     #UB = int(3*(LB/2))
     UB = naiive[0][1]+1
@@ -189,7 +189,7 @@ def solveInstance(instance, options):
         utils.writeSolution(options['output'],format_solution(m, o, instance['dim'], instance['n'], instance['w']))
     #Fa Show
     if options['show']:
-        utils.display_solution(format_solution(m, o, instance['dim'], instance['n'], instance['w']))
+        utils.displaySolution(format_solution(m, o, instance['dim'], instance['n'], instance['w']))
 
         
 def main():

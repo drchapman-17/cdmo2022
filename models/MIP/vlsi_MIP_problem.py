@@ -24,7 +24,7 @@ class VLSI_Problem():
         q=[i[1] for i in dim]
         largest_idx=np.argmax([p[i]*q[i] for i in range(n)])
         tot_area=sum([w_i*h_i for w_i,h_i in zip(p,q)])
-        stupidSol=utils.computeMostStupidSolution(instance,rotationsAllowed=rotationsAllowed)
+        stupidSol=utils.computeNaiveSolution(instance,rotationsAllowed=rotationsAllowed)
         if not stupidSol:
             raise Exception("Feasibility check failed: No solution can exist to the problem. The object can not be built.")
         Hmin = tot_area/WC
@@ -219,10 +219,10 @@ if __name__=="__main__":
         instance=utils.loadInstance(f"instances/ins-{sys.argv[1]}.txt")
     else:
         instance=utils.loadInstance("instances/ins-35.txt")
-    stupid=utils.computeMostStupidSolution(instance,True)
+    stupid=utils.computeNaiveSolution(instance,True)
     model=VLSI_Problem(instance,False)
     model.solve(timeLimit=300,verbose=True,ws=True)
     sol=model.getSolution()
     print("Time:",model.getElapsedTime() ,"\nSOL:",sol)
     # if sol:
-    #     utils.display_solution(sol)
+    #     utils.displaySolution(sol)
